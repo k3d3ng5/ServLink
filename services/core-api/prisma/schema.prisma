@@ -16,6 +16,7 @@ model Customer {
   name      String?
   channel   String    // app | telegram | whatsapp (later)
   handle    String?
+  telegramChatId String?  // set on OTP login — bot access requires it
   createdAt DateTime  @default(now())
   requests  ServiceRequest[]
 }
@@ -25,6 +26,7 @@ model Provider {
   name             String
   phone            String    @unique
   telegramChatId   String?
+  isOnline         Boolean @default(false)
   latitude         Float?
   longitude        Float?
   serviceRadiusKm  Float     @default(10)
@@ -68,7 +70,7 @@ model ServiceRequest {
   customerId    String
   customer      Customer  @relation(fields: [customerId], references: [id])
   categoryId    String?
-  zoneId        String
+  zoneId        String @default("general") // auto-assigned: nearest zone centroid, or "general"
   address       String
   latitude      Float?
   longitude     Float?
@@ -132,4 +134,63 @@ model ReworkTicket {
   job    Job    @relation(fields: [jobId], references: [id])
   reason String
   status String @default("open")
+}
+
+// Better Auth tables (email-OTP login for bot + app).
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
 }

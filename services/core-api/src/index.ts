@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
+import { auth } from "./auth.js";
 import { startFollowUpWorker } from "./followup.js";
+import { authRoutes } from "./routes/auth.js";
 import { jobs } from "./routes/jobs.js";
 import { metrics } from "./routes/metrics.js";
 import { providers } from "./routes/providers.js";
@@ -17,6 +19,24 @@ app.use("/requests", requests);
 app.use("/jobs", jobs);
 app.use("/providers", providers);
 app.use("/metrics", metrics);
+app.use("/auth", authRoutes);
+
+// Better Auth handler (email-OTP endpoints: /api/auth/email-otp/...)
+// Note: req.originalUrl keeps the /api/auth prefix the handler routes on.
+app.use("/api/auth", async (req, res) => {
+  const request = new Request(
+    `${process.env.PUBLIC_API_URL ?? "http://localhost:3001"}${req.originalUrl}`,
+    {
+      method: req.method,
+      headers: req.headers as Record<string, string>,
+      body: ["GET", "HEAD"].includes(req.method) ? undefined : JSON.stringify(req.body),
+    }
+  );
+  const response = await auth.handler(request);
+  res.status(response.status);
+  response.headers.forEach((v, k) => res.setHeader(k, v));
+  res.send(Buffer.from(await response.arrayBuffer()));
+});
 
 // Zod + domain errors -> clean JSON.
 app.use(

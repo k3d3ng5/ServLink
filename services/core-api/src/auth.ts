@@ -1,0 +1,41 @@
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { bearer, emailOTP } from "better-auth/plugins";
+import { PrismaClient } from "@prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL ?? "file:./dev.db",
+});
+const prisma = new PrismaClient({ adapter });
+
+export const auth = betterAuth({
+  baseURL: process.env.PUBLIC_API_URL ?? "http://localhost:3001",
+  secret: process.env.BETTER_AUTH_SECRET ?? "dev-only-change-me",
+  database: prismaAdapter(prisma, { provider: "sqlite" }),
+  plugins: [
+    bearer(), // token auth for bot + app (no cookies on those clients)
+    emailOTP({
+      async sendVerificationOTP({ email, otp, type }) {
+        if (process.env.RESEND_API_KEY) {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({
+              from: process.env.RESEND_FROM ?? "ServLink <noreply@servlink.app>",
+              to: [email],
+              subject: `Your ServLink code: ${otp}`,
+              text: `Your ServLink login code is ${otp} (${type}). It expires in 10 minutes.`,
+            }),
+          });
+        } else {
+          // No Resend key (dev): code goes to the server log, never to the client.
+          console.log(`[otp] ${email} (${type}): ${otp}`);
+        }
+      },
+    }),
+  ],
+});

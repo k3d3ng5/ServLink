@@ -29,6 +29,16 @@ export interface RequestView {
 }
 
 export const api = {
+  sendOtp: (email: string) =>
+    req("/api/auth/email-otp/send-verification-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, type: "sign-in" }),
+    }),
+  verifyOtp: (email: string, otp: string) =>
+    req<{ token: string }>("/api/auth/sign-in/email-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
+    }),
   createRequest: (b: Record<string, unknown>) =>
     req<{ request: { id: string } }>("/requests", { method: "POST", body: JSON.stringify(b) }),
   myRequests: (email: string) =>

@@ -25,7 +25,11 @@ export async function suggestProviders(requestId: string, limit = 5): Promise<Su
   if (!req) throw Object.assign(new Error("request not found"), { status: 404 });
 
   const reqGeo = hasCoords(req) ? { latitude: req.latitude!, longitude: req.longitude! } : null;
-  const providers = await db.provider.findMany({ include: { jobs: true } });
+  // Only online providers are offered jobs (availability gate).
+  const providers = await db.provider.findMany({
+    where: { isOnline: true },
+    include: { jobs: true },
+  });
   const ranked: Suggestion[] = [];
 
   for (const p of providers) {
@@ -40,8 +44,10 @@ export async function suggestProviders(requestId: string, limit = 5): Promise<Su
       if (distanceKm > p.serviceRadiusKm) continue; // out of service area
       reasons.push(`${distanceKm.toFixed(1)} km away`);
     } else {
-      if (!zones.includes(req.zoneId)) continue; // zone fallback
-      reasons.push(`serves ${req.zoneId} (area match — no GPS)`);
+      if (req.zoneId !== "general" && !zones.includes(req.zoneId)) continue; // zone fallback
+      reasons.push(
+        req.zoneId === "general" ? "area-wide match (no GPS)" : `serves ${req.zoneId} (area match — no GPS)`
+      );
     }
 
     // Proximity is the primary signal (0–100), trust/experience break ties.

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../db.js";
+import { hasCoords, nearestZone } from "../geo.js";
 import { suggestProviders } from "../matching.js";
 import { notifyAdmins, send } from "../notify.js";
 import { IntakeSchema, MatchSchema, TransitionSchema } from "../schemas.js";
@@ -32,6 +33,11 @@ requests.get("/", async (req, res, next) => {
 requests.post("/", async (req, res, next) => {
   try {
     const body = IntakeSchema.parse(req.body);
+    const zoneId =
+      body.zoneId ??
+      (body.latitude !== undefined && body.longitude !== undefined
+        ? nearestZone({ latitude: body.latitude, longitude: body.longitude })
+        : "general");
     const customer = await db.customer.upsert({
       where: body.email
         ? { email: body.email }
@@ -49,7 +55,7 @@ requests.post("/", async (req, res, next) => {
       data: {
         customerId: customer.id,
         categoryId: body.categoryId,
-        zoneId: body.zoneId,
+        zoneId,
         address: body.address,
         latitude: body.latitude,
         longitude: body.longitude,
@@ -69,7 +75,7 @@ requests.post("/", async (req, res, next) => {
       },
     });
     await notifyAdmins(
-      `🆕 New request \`${request.id.slice(0, 8)}\` (${body.zoneId}): ${body.description.slice(0, 100)}`
+      `🆕 New request \`${request.id.slice(0, 8)}\` (${zoneId}): ${body.description.slice(0, 100)}`
     );
     try {
       const top = (await suggestProviders(request.id, 1))[0];

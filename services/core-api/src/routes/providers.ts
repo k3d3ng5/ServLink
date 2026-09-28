@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { db } from "../db.js";
 import { notifyAdmins } from "../notify.js";
 import { ApplicationSchema, ReviewSchema } from "../schemas.js";
@@ -6,18 +7,54 @@ import { ApplicationSchema, ReviewSchema } from "../schemas.js";
 export const providers = Router();
 
 // GET /providers?categoryId=&zoneId= — rule-based candidate list (Phase 7 ranks).
+// Online-only when ?onlineOnly=true (provider availability gate).
 providers.get("/", async (req, res, next) => {
   try {
-    const { categoryId, zoneId } = req.query as Record<string, string | undefined>;
-    const all = await db.provider.findMany({ orderBy: { createdAt: "asc" } });
-    const list = all.filter((p) => {
-      const cats: string[] = JSON.parse(p.categories || "[]");
-      const zones: string[] = JSON.parse(p.zones || "[]");
-      if (categoryId && !cats.includes(categoryId)) return false;
-      if (zoneId && !zones.includes(zoneId)) return false;
-      return true;
+    const { categoryId, zoneId, onlineOnly } = req.query as Record<string, string | undefined>;
+    const all = await db.provider.findMany({
+      orderBy: { createdAt: "asc" },
+      include: { jobs: true },
     });
+    const list = all
+      .filter((p) => {
+        const cats: string[] = JSON.parse(p.categories || "[]");
+        const zones: string[] = JSON.parse(p.zones || "[]");
+        if (categoryId && !cats.includes(categoryId)) return false;
+        if (zoneId && zoneId !== "general" && !zones.includes(zoneId)) return false;
+        if (onlineOnly === "true" && !p.isOnline) return false;
+        return true;
+      })
+      .map(({ jobs, ...p }) => p);
     res.json({ providers: list });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /providers/me?chatId= — provider record for a Telegram chat.
+providers.get("/me", async (req, res, next) => {
+  try {
+    const chatId = req.query.chatId as string;
+    const provider = await db.provider.findFirst({
+      where: { telegramChatId: chatId },
+      include: { jobs: { include: { request: true }, orderBy: { matchedAt: "desc" }, take: 10 } },
+    });
+    if (!provider) return res.status(404).json({ error: "no provider for this chat" });
+    res.json({ provider });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /providers/:id/online { online } — availability toggle.
+providers.post("/:id/online", async (req, res, next) => {
+  try {
+    const { online } = z.object({ online: z.boolean() }).parse(req.body);
+    const provider = await db.provider.update({
+      where: { id: req.params.id },
+      data: { isOnline: online },
+    });
+    res.json({ provider });
   } catch (err) {
     next(err);
   }

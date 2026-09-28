@@ -3,7 +3,7 @@ import { z } from "zod";
 export const IntakeSchema = z.object({
   description: z.string().min(3).max(2000),
   categoryId: z.string().optional(),
-  zoneId: z.string().min(1),
+  zoneId: z.string().optional(), // server auto-assigns from GPS; no area picker on clients
   address: z.string().min(3).max(500),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),

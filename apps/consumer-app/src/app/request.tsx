@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import * as Location from "expo-location";
 import { api } from "../lib/api";
 import { session } from "../session";
-import { CATEGORIES, ZONES, colors } from "../theme";
+import { CATEGORIES, colors } from "../theme";
 import { Btn, Field, s } from "../ui";
 
 function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
@@ -31,7 +31,6 @@ export default function RequestScreen() {
   const [step, setStep] = useState(0);
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
-  const [zoneId, setZoneId] = useState<string>("");
   const [address, setAddress] = useState("");
   const [err, setErr] = useState("");
   const [sending, setSending] = useState(false);
@@ -56,7 +55,6 @@ export default function RequestScreen() {
       const { request } = await api.createRequest({
         description,
         categoryId: categoryId || undefined,
-        zoneId,
         address,
         ...(coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
         channel: "app",
@@ -92,17 +90,6 @@ export default function RequestScreen() {
         </>
       )}
       {step === 2 && (
-        <>
-          <Text style={s.title}>Which area?</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-            {ZONES.map(([label, id]) => (
-              <Chip key={id} label={label} selected={zoneId === id} onPress={() => setZoneId(id)} />
-            ))}
-          </View>
-          <Btn label="Next" onPress={() => (zoneId ? setStep(3) : setErr("Pick an area."))} />
-        </>
-      )}
-      {step === 3 && (
         <>
           <Text style={s.title}>Where exactly?</Text>
           <Field label="Address / landmark" value={address} onChange={setAddress} placeholder="House 5, 3rd Avenue, Gwarinpa" />
