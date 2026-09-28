@@ -96,6 +96,7 @@ Product shape (locked): **ServLink App + execution core**, Telegram as one adapt
 1. **Data model (Prisma, Postgres):**
    - `customers(id, phone, name?, channel, handle, created_at)`
    - `providers(id, name, phone, categories[], zones[], radius_km, tier, verification_status, availability, created_at)`
+   - `provider_applications(id, name, phone, categories[], zones[], telegram_chat_id, skill_note, photo_url, status, reviewed_by, created_at)` — provider self-registrations; console approval creates the `providers` row (tier Basic).
    - `zones(id, name)` seeded: Gwarinpa, Wuse 2, Jabi, Maitama, Asokoro; `categories(id, name)` seeded: the 8 PRD categories.
    - `requests(id, customer_id, category_id?, zone_id, address, description, preferred_time, source_channel, status, created_at)` — the normalized request.
    - `jobs(id, request_id, provider_id, matched_by, matched_at, confirmed_at, started_at, done_at)` — one active job per request; rematches create new rows (history preserved).
@@ -126,8 +127,9 @@ Product shape (locked): **ServLink App + execution core**, Telegram as one adapt
 
 1. **Bot flows (grammY, webhook):** `/start` → what-do-you-need (free text + category quick-replies) → zone (quick-reply buttons for the 5 zones) → address/location → phone (Telegram contact button) → summary + confirm → request created → later: match confirmation card, completion question with Yes/No buttons.
 2. **Identity linking:** Telegram `chat_id` ↔ `customers` row; if the same phone later signs into the App, rows merge (phone is the key, not channel).
-3. **Admin guardrails:** rate-limit intake per chat; unknown-zone fallback asks for nearest landmark + stores raw text; all bot-created requests visible in dispatch console identically to App ones.
-4. **Exit criteria:** parity checklist passes — every App flow has a Telegram equivalent hitting the same endpoints and producing the same `status_events`; 3 staged dry-runs logged end-to-end.
+3. **Provider self-registration (`/provider`):** name → categories (multi-select) → zones → phone (contact button) → skill note + work photo → application created; applicant gets "under review" status they can check with `/mystatus`.
+4. **Admin guardrails:** rate-limit intake per chat; unknown-zone fallback asks for nearest landmark + stores raw text; all bot-created requests and applications visible in dispatch console identically to App ones.
+5. **Exit criteria:** parity checklist passes — every App flow has a Telegram equivalent hitting the same endpoints and producing the same `status_events`; provider registration → approval → first match exercised in staging; 3 staged dry-runs logged end-to-end.
 
 ---
 
@@ -135,7 +137,7 @@ Product shape (locked): **ServLink App + execution core**, Telegram as one adapt
 
 **Goal:** make the human matcher fast and consistent — this is the "Manual" in manual matching.
 
-1. **Next.js internal app (auth-gated):** inbound queue (new requests, oldest first, zone/category badges) → provider suggest panel (filter by category+zone, show tier/availability/notes) → one-click match → confirmation preview (exact message the customer will see) → job board (kanban by state) → follow-up inbox (responses needing action) → rework queue.
+1. **Next.js internal app (auth-gated):** inbound queue (new requests, oldest first, zone/category badges) → provider suggest panel (filter by category+zone, show tier/availability/notes) → one-click match → confirmation preview (exact message the customer will see) → job board (kanban by state) → follow-up inbox (responses needing action) → rework queue → **provider applications inbox (approve → tier Basic / reject with reason)**.
 2. **SOP embedded:** matching SLA timer visible per request (2-hour validation threshold, PRD Sec 11); escalation highlight past 60 min unmatched.
 3. **Exit criteria:** founder matches 5 staged requests in <5 min each; every action writes `status_events` with `actor=concierge`.
 
@@ -180,11 +182,11 @@ Product shape (locked): **ServLink App + execution core**, Telegram as one adapt
 
 **Goal:** 10–15 real jobs, executed like an operation, not a demo.
 
-1. **Supply — starts from zero, Week 1 (critical path, runs parallel with build):**
-   - Sourcing (in order): personal referrals → estate/area WhatsApp groups in the 5 launch zones → artisan clusters/markets (e.g. area furniture/plumbing clusters) → repeat-customer recommendations from early jobs.
-   - Target: 5–10 providers, minimum 2 each in Plumbing + Electrical (highest frequency/urgency), covering Gwarinpa, Wuse 2, Jabi first; expand to Maitama/Asokoro once matched.
-   - Vetting checklist (in-person, logged in console): identity + photo, skill evidence (past work photos/references), 2 references called, availability calendar + response SLA agreed (≤30 min acknowledgement), direct phone fallback, tier assigned (all start Basic; Verified after checks + first jobs).
-   - No provider records exist yet — seed the `providers` table only with fully-vetted people; never seed fakes (PRD Sec 18: no fake supply signals).
+1. **Supply — self-registration funnel, from zero, Week 1 (critical path, runs parallel with build):**
+   - Providers register themselves: Telegram bot `/provider` flow (name, categories, zones, phone, skill note, work photo) → `provider_applications` row → founder reviews in console inbox → approve assigns tier Basic, reject with reason.
+   - Sourcing the funnel (in order): personal referrals asking artisans to self-register → estate/area WhatsApp groups in the 5 launch zones (registration link) → artisan clusters/markets → repeat-customer recommendations from early jobs.
+   - Target: 5–10 approved providers, minimum 2 each in Plumbing + Electrical, covering Gwarinpa, Wuse 2, Jabi first; Maitama/Asokoro once matched.
+   - Verification stays human in the MVP (call references, confirm identity + skill evidence) — self-registration removes founder data-entry, not founder judgment. Never seed fake providers (PRD Sec 18).
 2. **Demand:** launch to beachhead (new residents/renters channels: estate groups, relocation contacts) — App APK + Telegram link side by side.
 3. **Concierge SOP (`docs/runbooks/concierge.md`):** shift coverage, match SLA, confirmation script, no-show protocol, dispute handling, rework dispatch, end-of-day log review.
 4. **Support:** one human phone line + Telegram fallback during pilot hours; every complaint becomes a `rework_ticket` or logged feedback.
