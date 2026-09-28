@@ -93,7 +93,7 @@ Product shape (locked): **ServLink App + execution core**, Telegram as one adapt
 
 **Goal:** the product's heart beats: intake → log → match → confirm → follow-up, all auditable.
 
-1. **Data model (Prisma, Postgres):**
+1. **Data model (Prisma; SQLite `file:./dev.db` for dev, Postgres-compatible so the pilot switch is one line):**
    - `customers(id, phone, name?, channel, handle, created_at)`
    - `providers(id, name, phone, categories[], zones[], radius_km, tier, verification_status, availability, created_at)`
    - `provider_applications(id, name, phone, categories[], zones[], telegram_chat_id, skill_note, photo_url, status, reviewed_by, created_at)` — provider self-registrations; console approval creates the `providers` row (tier Basic).

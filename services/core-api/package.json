@@ -8,8 +8,14 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test src/**/*.test.ts"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "latest",
+    "@prisma/client": "latest",
     "@servlink/core-domain": "0.1.0",
+    "better-sqlite3": "latest",
     "better-auth": "latest",
     "express": "^4.21.0",
     "resend": "latest",

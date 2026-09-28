@@ -1,0 +1,127 @@
+// Prisma schema — dev runs SQLite (agent-session Postgres is unstable, ADR-003).
+// Postgres stays the pilot target: schema uses only compatible types/Changing
+// `provider` to "postgresql" + a fresh migration is the entire switch.
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  phone     String?   @unique
+  email     String?   @unique
+  name      String?
+  channel   String    // app | telegram | whatsapp (later)
+  handle    String?
+  createdAt DateTime  @default(now())
+  requests  ServiceRequest[]
+}
+
+model Provider {
+  id               String    @id @default(cuid())
+  name             String
+  phone            String    @unique
+  categories       String    // JSON array of category ids
+  zones            String    // JSON array of zone ids
+  tier             String    @default("Basic") // Basic | Verified | Professional
+  verificationStatus String  @default("pending")
+  availability     String?
+  createdAt        DateTime  @default(now())
+  jobs             Job[]
+}
+
+model ProviderApplication {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String
+  categories   String   // JSON array
+  zones        String   // JSON array
+  telegramChatId String?
+  skillNote    String?
+  photoUrl     String?
+  status       String   @default("pending") // pending | approved | rejected
+  reviewedBy   String?
+  createdAt    DateTime @default(now())
+}
+
+model Zone {
+  id   String @id
+  name String @unique
+}
+
+model Category {
+  id   String @id
+  name String @unique
+}
+
+model ServiceRequest {
+  id            String    @id @default(cuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id])
+  categoryId    String?
+  zoneId        String
+  address       String
+  description   String
+  preferredTime String?
+  sourceChannel String
+  status        String    @default("REQUESTED")
+  createdAt     DateTime  @default(now())
+  jobs          Job[]
+  events        StatusEvent[]
+}
+
+model Job {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id])
+  providerId String
+  provider  Provider       @relation(fields: [providerId], references: [id])
+  matchedBy String         // concierge | system
+  matchedAt DateTime       @default(now())
+  confirmedAt DateTime?
+  startedAt DateTime?
+  doneAt    DateTime?
+  followUps FollowUp[]
+  ratings   Rating[]
+  reworks   ReworkTicket[]
+}
+
+model StatusEvent {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id])
+  fromStatus String
+  toStatus   String
+  actor      String
+  note       String?
+  at         DateTime       @default(now())
+}
+
+model FollowUp {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id])
+  sentAt      DateTime @default(now())
+  channel     String
+  response    String?
+  confirmedOk Boolean?
+}
+
+model Rating {
+  id     String @id @default(cuid())
+  jobId  String
+  job    Job    @relation(fields: [jobId], references: [id])
+  score  Int
+  note   String?
+}
+
+model ReworkTicket {
+  id     String @id @default(cuid())
+  jobId  String
+  job    Job    @relation(fields: [jobId], references: [id])
+  reason String
+  status String @default("open")
+}
