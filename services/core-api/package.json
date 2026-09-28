@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/**/*.test.ts"
+    "test": "node --test src/**/*.test.ts",
+    "import:providers": "tsx scripts/import-providers-csv.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
