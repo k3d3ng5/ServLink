@@ -1,0 +1,66 @@
+name: servlink
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-servlink}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-servlink_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-servlink}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-servlink}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  core-api:
+    build: ../services/core-api
+    restart: unless-stopped
+    env_file:
+      - ../services/core-api/.env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-servlink}:${POSTGRES_PASSWORD:-servlink_dev_only}@postgres:5432/${POSTGRES_DB:-servlink}
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  telegram-bot:
+    build: ../apps/telegram-bot
+    restart: unless-stopped
+    env_file:
+      - ../apps/telegram-bot/.env
+    environment:
+      CORE_API_URL: http://core-api:3001
+    depends_on:
+      - core-api
+
+  # dispatch-console lands in Phase 6 — uncomment after `npx create-next-app`:
+  # dispatch-console:
+  #   build: ../apps/dispatch-console
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - core-api
+
+  # Free public HTTPS for Telegram/Paystack webhooks while hosting locally.
+  # Run: docker compose --profile tunnel up -d tunnel
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://core-api:3001
+    depends_on:
+      - core-api
+    profiles:
+      - tunnel
+
+volumes:
+  pgdata:

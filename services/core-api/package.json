@@ -1,0 +1,25 @@
+{
+  "name": "core-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@servlink/core-domain": "0.1.0",
+    "better-auth": "latest",
+    "express": "^4.21.0",
+    "resend": "latest",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/node": "^22.0.0",
+    "prisma": "latest",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.0"
+  }
+}

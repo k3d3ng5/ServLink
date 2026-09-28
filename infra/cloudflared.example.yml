@@ -1,0 +1,7 @@
+# cloudflared quick-tunnel needs no config file — the compose `tunnel`
+# service runs: cloudflared tunnel --url http://core-api:3001
+# On boot it prints a https://*.trycloudflare.com URL. Use it for:
+#   - Telegram: setWebhook to <url>/webhooks/telegram (Phase 5)
+#   - Paystack: webhook URL <url>/webhooks/paystack (post-MVP)
+# URL changes on every restart — update dashboards each time (free tier limit).
+# If a stable URL is needed later: Cloudflare Zero Trust tunnel (still free).

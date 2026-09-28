@@ -1,0 +1,21 @@
+{
+  "name": "servlink",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ServLink — App + execution core, Telegram as one adapter.",
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:infra": "docker compose -f infra/docker-compose.yml up -d postgres",
+    "dev:tunnel": "docker compose -f infra/docker-compose.yml --profile tunnel up -d tunnel",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

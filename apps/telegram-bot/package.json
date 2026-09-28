@@ -1,0 +1,21 @@
+{
+  "name": "telegram-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/bot.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@servlink/adapter-kit": "0.1.0",
+    "@servlink/core-domain": "0.1.0",
+    "dotenv": "^16.4.0",
+    "grammy": "^1.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.0"
+  }
+}
