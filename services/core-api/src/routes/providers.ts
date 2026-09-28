@@ -31,15 +31,16 @@ providers.get("/", async (req, res, next) => {
   }
 });
 
-// GET /providers/me?chatId= — provider record for a Telegram chat.
+// GET /providers/me?chatId= or ?email= — provider record for a chat or login.
 providers.get("/me", async (req, res, next) => {
   try {
-    const chatId = req.query.chatId as string;
+    const { chatId, email } = req.query as Record<string, string | undefined>;
+    if (!chatId && !email) return res.status(400).json({ error: "chatId or email required" });
     const provider = await db.provider.findFirst({
-      where: { telegramChatId: chatId },
+      where: chatId ? { telegramChatId: chatId } : { email },
       include: { jobs: { include: { request: true }, orderBy: { matchedAt: "desc" }, take: 10 } },
     });
-    if (!provider) return res.status(404).json({ error: "no provider for this chat" });
+    if (!provider) return res.status(404).json({ error: "no provider for this identity" });
     res.json({ provider });
   } catch (err) {
     next(err);
@@ -71,6 +72,7 @@ providers.post("/provider-applications", async (req, res, next) => {
         categories: JSON.stringify(body.categories),
         zones: JSON.stringify(body.zones),
         telegramChatId: body.telegramChatId,
+        email: body.email,
         latitude: body.latitude,
         longitude: body.longitude,
         skillNote: body.skillNote,
@@ -110,6 +112,7 @@ providers.post("/provider-applications/:id/review", async (req, res, next) => {
           name: app.name,
           phone: app.phone,
           telegramChatId: app.telegramChatId,
+          email: app.email,
           latitude: app.latitude,
           longitude: app.longitude,
           categories: app.categories,

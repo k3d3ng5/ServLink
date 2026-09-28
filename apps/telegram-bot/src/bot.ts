@@ -360,6 +360,7 @@ bot.on("message:text", async (ctx, next) => {
             categories: JSON.parse(d.categories ?? "[]"),
             zones: ["general"],
             telegramChatId: String(ctx.chat?.id),
+            email: s.email,
             latitude: d.latitude !== undefined ? Number(d.latitude) : undefined,
             longitude: d.longitude !== undefined ? Number(d.longitude) : undefined,
             skillNote: d.skillNote || undefined,

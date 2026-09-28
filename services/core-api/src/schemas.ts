@@ -64,6 +64,7 @@ export const ApplicationSchema = z.object({
   categories: z.array(z.string()).min(1),
   zones: z.array(z.string()).min(1),
   telegramChatId: z.string().optional(),
+  email: z.string().email().optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   skillNote: z.string().max(1000).optional(),

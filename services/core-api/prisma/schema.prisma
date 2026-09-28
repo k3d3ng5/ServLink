@@ -25,6 +25,7 @@ model Provider {
   id               String    @id @default(cuid())
   name             String
   phone            String    @unique
+  email            String?
   telegramChatId   String?
   isOnline         Boolean @default(false)
   latitude         Float?
@@ -46,6 +47,7 @@ model ProviderApplication {
   categories   String   // JSON array
   zones        String   // JSON array
   telegramChatId String?
+  email        String?
   latitude     Float?
   longitude    Float?
   skillNote    String?

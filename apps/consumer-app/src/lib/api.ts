@@ -1,5 +1,7 @@
 // API client — same core as bot + console. Pilot: dev machine on LAN.
 // Expo Go phones can't reach localhost: set your machine's LAN IP here.
+import { session } from "../session";
+
 export const API_URL = "http://192.168.1.10:3001";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -29,6 +31,16 @@ export interface RequestView {
 }
 
 export const api = {
+  proMe: () =>
+    req<{
+      provider: {
+        id: string;
+        isOnline: boolean;
+        jobs: Array<{ id: string; request: { description: string; status: string } }>;
+      };
+    }>(`/providers/me?email=${encodeURIComponent(session.email)}`),
+  setOnline: (id: string, online: boolean) =>
+    req(`/providers/${id}/online`, { method: "POST", body: JSON.stringify({ online }) }),
   sendOtp: (email: string) =>
     req("/api/auth/email-otp/send-verification-otp", {
       method: "POST",
