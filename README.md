@@ -10,13 +10,13 @@ Prereqs: Node 22+, Docker Desktop (running), npm.
 
 ```powershell
 # 1. install all workspace deps
-npm install
+npm.cmd install
 
 # 2. start local Postgres 17
-npm run dev:infra
+npm.cmd run dev:infra
 
 # 3. in another shell: run the API (stub)
-npm run dev --workspace=services/core-api
+npm.cmd run dev --workspace=services/core-api
 
 # 4. health check
 curl http://localhost:3001/health
@@ -25,7 +25,7 @@ curl http://localhost:3001/health
 Public webhooks (Telegram/Paystack) need a public URL while hosting locally:
 
 ```powershell
-npm run dev:tunnel
+npm.cmd run dev:tunnel
 # copy the https://*.trycloudflare.com URL into BotFather webhook / Paystack dashboard
 ```
 
