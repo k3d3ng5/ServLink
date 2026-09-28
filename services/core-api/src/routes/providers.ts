@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../db.js";
+import { notifyAdmins } from "../notify.js";
 import { ApplicationSchema, ReviewSchema } from "../schemas.js";
 
 export const providers = Router();
@@ -37,6 +38,7 @@ providers.post("/provider-applications", async (req, res, next) => {
         photoUrl: body.photoUrl,
       },
     });
+    await notifyAdmins(`🧰 New provider application: ${body.name} (${body.phone})`);
     res.status(201).json({ application: app });
   } catch (err) {
     next(err);

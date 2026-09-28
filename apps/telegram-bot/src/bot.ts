@@ -329,6 +329,29 @@ bot.command("providers", async (ctx) => {
   });
 });
 
+bot.command("suggest", async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
+  const req8 = (ctx.match as string).trim();
+  if (!req8) return ctx.reply("Usage: /suggest <requestRef>");
+  try {
+    const { requests } = await api<{ requests: Array<{ id: string }> }>("/requests?status=REQUESTED");
+    const req = requests.find((r) => r.id.startsWith(req8));
+    if (!req) return ctx.reply("Request ref not found — check /pending.");
+    const { suggestions } = await api<{
+      suggestions: Array<{ providerId: string; name: string; tier: string; score: number; reasons: string[] }>;
+    }>(`/requests/${req.id}/suggestions`);
+    if (!suggestions.length) return ctx.reply("No eligible providers for this request.");
+    await ctx.reply(
+      suggestions
+        .map((s) => `\`${s.providerId.slice(0, 8)}\` ${s.name} (${s.tier}, ${s.score}) — ${s.reasons.join(", ")}`)
+        .join("\n") + `\n\n/match ${req8} <providerRef>`,
+      { parse_mode: "Markdown" }
+    );
+  } catch (e) {
+    await ctx.reply(`Failed: ${(e as Error).message}`);
+  }
+});
+
 bot.command("match", async (ctx) => {
   if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
   const [req8, prov8] = (ctx.match as string).trim().split(/\s+/);

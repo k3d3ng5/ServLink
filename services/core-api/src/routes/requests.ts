@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "../db.js";
-import { send } from "../notify.js";
+import { suggestProviders } from "../matching.js";
+import { notifyAdmins, send } from "../notify.js";
 import { IntakeSchema, MatchSchema } from "../schemas.js";
 import { applyTransition } from "../transitions.js";
 
@@ -65,6 +66,9 @@ requests.post("/", async (req, res, next) => {
         note: "intake",
       },
     });
+    await notifyAdmins(
+      `🆕 New request \`${request.id.slice(0, 8)}\` (${body.zoneId}): ${body.description.slice(0, 100)}`
+    );
     res.status(201).json({ request });
   } catch (err) {
     next(err);
@@ -84,6 +88,16 @@ requests.get("/:id", async (req, res, next) => {
     });
     if (!request) return res.status(404).json({ error: "not found" });
     res.json({ request });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /requests/:id/suggestions — ranked provider candidates (rule-based v1).
+requests.get("/:id/suggestions", async (req, res, next) => {
+  try {
+    const suggestions = await suggestProviders(req.params.id);
+    res.json({ suggestions });
   } catch (err) {
     next(err);
   }
