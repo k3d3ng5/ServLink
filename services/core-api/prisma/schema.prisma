@@ -25,6 +25,9 @@ model Provider {
   name             String
   phone            String    @unique
   telegramChatId   String?
+  latitude         Float?
+  longitude        Float?
+  serviceRadiusKm  Float     @default(10)
   categories       String    // JSON array of category ids
   zones            String    // JSON array of zone ids
   tier             String    @default("Basic") // Basic | Verified | Professional
@@ -41,6 +44,8 @@ model ProviderApplication {
   categories   String   // JSON array
   zones        String   // JSON array
   telegramChatId String?
+  latitude     Float?
+  longitude    Float?
   skillNote    String?
   photoUrl     String?
   status       String   @default("pending") // pending | approved | rejected
@@ -65,6 +70,8 @@ model ServiceRequest {
   categoryId    String?
   zoneId        String
   address       String
+  latitude      Float?
+  longitude     Float?
   description   String
   preferredTime String?
   sourceChannel String

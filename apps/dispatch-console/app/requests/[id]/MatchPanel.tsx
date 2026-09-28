@@ -52,7 +52,9 @@ export function MatchPanel({
           {suggestions.map((s) => (
             <li key={s.providerId} className="flex items-center justify-between gap-3 text-sm">
               <span>
-                <b>{s.name}</b> ({s.tier}, {s.score}) — {s.reasons.join(", ")}
+                <b>{s.name}</b> ({s.tier}
+                {s.distanceKm === null ? ", area match" : `, ${s.distanceKm.toFixed(1)} km`}) —{" "}
+                {s.reasons.join(", ")}
               </span>
               <button
                 disabled={busy}

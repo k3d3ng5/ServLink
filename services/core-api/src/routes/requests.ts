@@ -51,6 +51,8 @@ requests.post("/", async (req, res, next) => {
         categoryId: body.categoryId,
         zoneId: body.zoneId,
         address: body.address,
+        latitude: body.latitude,
+        longitude: body.longitude,
         description: body.description,
         preferredTime: body.preferredTime,
         sourceChannel: body.channel,

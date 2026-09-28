@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "description": "ServLink — App + execution core, Telegram as one adapter.",
   "workspaces": [
-    "apps/*",
+    "apps/telegram-bot",
+    "apps/dispatch-console",
     "services/*",
     "packages/*"
   ],

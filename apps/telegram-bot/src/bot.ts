@@ -134,10 +134,25 @@ bot.on("message:text", async (ctx, next) => {
       await ctx.reply("Street address / landmark?", { reply_markup: cancelKb });
     } else if (s.step === "address") {
       d.address = text;
-      s.step = "phone";
-      await ctx.reply("Your phone number? (we'll call about the job)", {
-        reply_markup: new Keyboard().requestContact("📱 Share my number").text("❌ Cancel").resized(),
-      });
+      s.step = "location";
+      await ctx.reply(
+        "Almost done — share your live location so we match the *closest* provider (tap 📍), or /skip to use the address only.",
+        {
+          reply_markup: new Keyboard()
+            .requestLocation("📍 Share location")
+            .text("❌ Cancel")
+            .resized(),
+        }
+      );
+    } else if (s.step === "location") {
+      if (text === "/skip") {
+        s.step = "phone";
+        await ctx.reply("Your phone number? (we'll call about the job)", {
+          reply_markup: new Keyboard().requestContact("📱 Share my number").text("❌ Cancel").resized(),
+        });
+      } else {
+        return ctx.reply("Tap 📍 Share location, or /skip to continue without GPS.");
+      }
     } else if (s.step === "phone") {
       const digits = text.replace(/\D/g, "");
       if (digits.length < 5)
@@ -159,6 +174,8 @@ bot.on("message:text", async (ctx, next) => {
             categoryId: d.categoryId,
             zoneId: d.zoneId,
             address: d.address,
+            latitude: d.latitude !== undefined ? Number(d.latitude) : undefined,
+            longitude: d.longitude !== undefined ? Number(d.longitude) : undefined,
             channel: "telegram",
             handle: String(ctx.chat?.id),
             name: d.phone,
@@ -229,10 +246,26 @@ bot.on("message:text", async (ctx, next) => {
       if (digits.length < 5)
         return ctx.reply("That doesn't look like a phone number — please type it again (e.g. 0803...).");
       d.phone = text;
-      s.step = "skill";
-      await ctx.reply("Briefly describe your experience (or /skip).", {
-        reply_markup: cancelKb,
-      });
+      s.step = "plocation";
+      await ctx.reply(
+        "Where are you based? Share your location 📍 so jobs near you find you first — or /skip.",
+        {
+          reply_markup: new Keyboard()
+            .requestLocation("📍 Share location")
+            .text("❌ Cancel")
+            .resized(),
+        }
+      );
+    } else if (s.step === "plocation") {
+      if (text === "/skip") {
+        s.step = "skill";
+        await ctx.reply("Briefly describe your experience (or /skip).", {
+          reply_markup: cancelKb,
+        });
+      } else {
+        return ctx.reply("Tap 📍 Share location, or /skip to continue.");
+      }
+    } else if (s.step === "skill") {
     } else if (s.step === "skill") {
       if (/^\/skip$/i.test(text)) d.skillNote = "";
       else if (text.length < 3)
@@ -247,6 +280,8 @@ bot.on("message:text", async (ctx, next) => {
             categories: JSON.parse(d.categories ?? "[]"),
             zones: JSON.parse(d.zones ?? "[]"),
             telegramChatId: String(ctx.chat?.id),
+            latitude: d.latitude !== undefined ? Number(d.latitude) : undefined,
+            longitude: d.longitude !== undefined ? Number(d.longitude) : undefined,
             skillNote: d.skillNote || undefined,
           }),
         });
@@ -274,8 +309,37 @@ bot.on("message:contact", async (ctx) => {
     );
   } else if (s.flow === "provider" && s.step === "phone") {
     (s.data ??= {}).phone = ctx.msg.contact.phone_number;
+    s.step = "plocation";
+    await ctx.reply(
+      "Where are you based? Share your location 📍 so jobs near you find you first — or /skip.",
+      {
+        reply_markup: new Keyboard()
+          .requestLocation("📍 Share location")
+          .text("❌ Cancel")
+          .resized(),
+      }
+    );
+  }
+});
+
+bot.on("message:location", async (ctx) => {
+  const s = ctx.session;
+  const d = (s.data ??= {});
+  const { latitude, longitude } = ctx.msg.location;
+  if (s.flow === "request" && s.step === "location") {
+    d.latitude = String(latitude);
+    d.longitude = String(longitude);
+    s.step = "phone";
+    await ctx.reply("📍 Location saved — closest providers will rank first. Your phone number?", {
+      reply_markup: new Keyboard().requestContact("📱 Share my number").text("❌ Cancel").resized(),
+    });
+  } else if (s.flow === "provider" && s.step === "plocation") {
+    d.latitude = String(latitude);
+    d.longitude = String(longitude);
     s.step = "skill";
-    await ctx.reply("Briefly describe your experience (or /skip).", { reply_markup: cancelKb });
+    await ctx.reply("📍 Base saved — nearby jobs will find you first. Briefly describe your experience (or /skip).", {
+      reply_markup: cancelKb,
+    });
   }
 });
 
@@ -376,12 +440,15 @@ bot.command("suggest", async (ctx) => {
     const req = requests.find((r) => r.id.startsWith(req8));
     if (!req) return ctx.reply("Request ref not found — check /pending.");
     const { suggestions } = await api<{
-      suggestions: Array<{ providerId: string; name: string; tier: string; score: number; reasons: string[] }>;
+      suggestions: Array<{ providerId: string; name: string; tier: string; score: number; distanceKm: number | null; reasons: string[] }>;
     }>(`/requests/${req.id}/suggestions`);
     if (!suggestions.length) return ctx.reply("No eligible providers for this request.");
     await ctx.reply(
       suggestions
-        .map((s) => `\`${s.providerId.slice(0, 8)}\` ${s.name} (${s.tier}, ${s.score}) — ${s.reasons.join(", ")}`)
+        .map((s) => {
+          const dist = s.distanceKm === null ? "" : `, ${s.distanceKm.toFixed(1)} km`;
+          return `\`${s.providerId.slice(0, 8)}\` ${s.name} (${s.tier}${dist}) — ${s.reasons.join(", ")}`;
+        })
         .join("\n") + `\n\n/match ${req8} <providerRef>`,
       { parse_mode: "Markdown" }
     );

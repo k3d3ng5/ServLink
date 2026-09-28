@@ -30,6 +30,7 @@ export interface Suggestion {
   name: string;
   tier: string;
   score: number;
+  distanceKm: number | null;
   reasons: string[];
 }
 
