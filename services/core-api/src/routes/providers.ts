@@ -70,6 +70,7 @@ providers.post("/provider-applications/:id/review", async (req, res, next) => {
         data: {
           name: app.name,
           phone: app.phone,
+          telegramChatId: app.telegramChatId,
           categories: app.categories,
           zones: app.zones,
           tier: "Basic",

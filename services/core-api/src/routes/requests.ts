@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "../db.js";
 import { suggestProviders } from "../matching.js";
 import { notifyAdmins, send } from "../notify.js";
-import { IntakeSchema, MatchSchema } from "../schemas.js";
+import { IntakeSchema, MatchSchema, TransitionSchema } from "../schemas.js";
 import { applyTransition } from "../transitions.js";
 
 export const requests = Router();
@@ -69,6 +69,16 @@ requests.post("/", async (req, res, next) => {
     await notifyAdmins(
       `🆕 New request \`${request.id.slice(0, 8)}\` (${body.zoneId}): ${body.description.slice(0, 100)}`
     );
+    try {
+      const top = (await suggestProviders(request.id, 1))[0];
+      if (top) {
+        await notifyAdmins(
+          `💡 Top suggestion for \`${request.id.slice(0, 8)}\`: ${top.name} (${top.tier}, ${top.score}) — /match ${request.id.slice(0, 8)} ${top.providerId.slice(0, 8)}`
+        );
+      }
+    } catch {
+      // suggestions never block intake
+    }
     res.status(201).json({ request });
   } catch (err) {
     next(err);
@@ -109,11 +119,20 @@ requests.post("/:id/match", async (req, res, next) => {
     const body = MatchSchema.parse(req.body);
     const request = await db.serviceRequest.findUnique({
       where: { id: req.params.id },
-      include: { customer: true },
+      include: { customer: true, jobs: { orderBy: { matchedAt: "asc" } } },
     });
     if (!request) return res.status(404).json({ error: "not found" });
-    if (request.status !== "REQUESTED") {
-      return res.status(422).json({ error: `request is ${request.status}, expected REQUESTED` });
+    if (request.status !== "REQUESTED" && request.status !== "MATCHED") {
+      return res
+        .status(422)
+        .json({ error: `request is ${request.status}, expected REQUESTED or MATCHED (rematch)` });
+    }
+    // Rematch: retire the previous job first (full history preserved).
+    if (request.status === "MATCHED") {
+      const prev = request.jobs.at(-1);
+      if (prev) {
+        await applyTransition(prev.id, "CANCELLED", body.matchedBy, "rematch");
+      }
     }
     const provider = await db.provider.findUnique({ where: { id: body.providerId } });
     if (!provider) return res.status(404).json({ error: "provider not found" });
@@ -142,9 +161,17 @@ requests.post("/:id/match", async (req, res, next) => {
     await send({
       to,
       kind: request.sourceChannel === "telegram" ? "telegram" : "push",
-      text: `ServLink: ${provider.name} is assigned to your request (${request.description.slice(0, 80)}). Ref ${job.id.slice(0, 8)}.`,
-      meta: { jobId: job.id },
+      text: `ServLink: ${provider.name} is assigned to your request (${request.description.slice(0, 80)}). Ref ${job.id.slice(0, 8)}.\nPlease confirm:`,
+      meta: { jobId: job.id, jobButtons: `${job.id}:customer` },
     });
+    if (provider.telegramChatId) {
+      await send({
+        to: provider.telegramChatId,
+        kind: "telegram",
+        text: `🧰 New ServLink job: ${request.description.slice(0, 100)} (${request.zoneId}, ${request.address}). Ref ${job.id.slice(0, 8)}.\nAccept?`,
+        meta: { jobId: job.id, jobButtons: `${job.id}:provider` },
+      });
+    }
     res.status(201).json({ job });
   } catch (err) {
     next(err);
@@ -154,7 +181,6 @@ requests.post("/:id/match", async (req, res, next) => {
 // POST /jobs/:id/transition — guarded lifecycle step.
 requests.post("/jobs/:id/transition", async (req, res, next) => {
   try {
-    const { TransitionSchema } = await import("../schemas.js");
     const body = TransitionSchema.parse(req.body);
     const result = await applyTransition(req.params.id, body.to as never, body.actor, body.note);
     res.json(result);

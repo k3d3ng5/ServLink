@@ -279,6 +279,44 @@ bot.on("message:contact", async (ctx) => {
   }
 });
 
+// ---------- Match Confirm (customer) / Accept (provider) buttons ----------
+bot.on("callback_query:data", async (ctx, next) => {
+  const m = ctx.callbackQuery.data.match(/^jb:(.+):(customer|provider):(ok|no)$/);
+  if (!m) return next();
+  const [, jobId, role, verdict] = m;
+  try {
+    if (verdict === "ok") {
+      await api(`/requests/jobs/${jobId}/transition`, {
+        method: "POST",
+        body: JSON.stringify({ to: "CONFIRMED", actor: role }),
+      });
+      await ctx.answerCallbackQuery(
+        role === "provider" ? "Job accepted — customer notified." : "Confirmed — see you soon!"
+      );
+      await ctx.editMessageText(
+        role === "provider"
+          ? "✅ You accepted this job. Please contact the customer promptly."
+          : "✅ Booking confirmed. Your provider is on the way."
+      );
+    } else {
+      if (role === "provider") {
+        // Decline routes to the founder for rematch — request stays MATCHED.
+        await ctx.answerCallbackQuery("Declined — ServLink will reassign.");
+        await ctx.editMessageText("❌ You declined this job. ServLink will reassign it.");
+      } else {
+        await api(`/requests/jobs/${jobId}/transition`, {
+          method: "POST",
+          body: JSON.stringify({ to: "CANCELLED", actor: "customer" }),
+        });
+        await ctx.answerCallbackQuery("Request cancelled.");
+        await ctx.editMessageText("❌ Request cancelled. Tap 🛠 anytime to book again.");
+      }
+    }
+  } catch (e) {
+    await ctx.answerCallbackQuery(`Error: ${(e as Error).message}`);
+  }
+});
+
 // ---------- Follow-up YES/NO buttons ----------
 bot.on("callback_query:data", async (ctx) => {
   const m = ctx.callbackQuery.data.match(/^fu:(.+):(yes|no)$/);

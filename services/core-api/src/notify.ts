@@ -21,6 +21,18 @@ export async function send(input: SendInput): Promise<{ delivered: boolean; via:
         ],
       };
     }
+    // Match confirmations get Confirm/Cancel (customer) or Accept/Decline (provider).
+    if (input.meta?.jobButtons) {
+      const [jobId, role] = String(input.meta.jobButtons).split(":");
+      const yes = role === "provider" ? "✅ Accept job" : "✅ Confirm";
+      const no = role === "provider" ? "❌ Decline" : "❌ Cancel request";
+      body.reply_markup = {
+        inline_keyboard: [[
+          { text: yes, callback_data: `jb:${jobId}:${role}:ok` },
+          { text: no, callback_data: `jb:${jobId}:${role}:no` },
+        ]],
+      };
+    }
     const res = await fetch(
       `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
       {

@@ -24,6 +24,7 @@ model Provider {
   id               String    @id @default(cuid())
   name             String
   phone            String    @unique
+  telegramChatId   String?
   categories       String    // JSON array of category ids
   zones            String    // JSON array of zone ids
   tier             String    @default("Basic") // Basic | Verified | Professional
