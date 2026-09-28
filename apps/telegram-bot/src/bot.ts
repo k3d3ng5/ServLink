@@ -139,6 +139,9 @@ bot.on("message:text", async (ctx, next) => {
         reply_markup: new Keyboard().requestContact("📱 Share my number").text("❌ Cancel").resized(),
       });
     } else if (s.step === "phone") {
+      const digits = text.replace(/\D/g, "");
+      if (digits.length < 5)
+        return ctx.reply("That doesn't look like a phone number — please type it again (e.g. 0803...).");
       d.phone = text;
       s.step = "confirm";
       const cat = CATEGORIES.find(([, id]) => id === d.categoryId)?.[0];
@@ -182,11 +185,20 @@ bot.on("message:text", async (ctx, next) => {
           CATEGORIES.map(([label], i) => `${i + 1}. ${label}`).join("\n")
       );
     } else if (s.step === "categories") {
-      const ids = text
-        .split(",")
-        .map((n) => CATEGORIES[Number(n.trim()) - 1]?.[1])
+      const parts = text.split(",").map((n) => n.trim().toLowerCase()).filter(Boolean);
+      const ids = parts
+        .map((p) => {
+          const byNum = CATEGORIES[Number(p) - 1]?.[1];
+          if (byNum) return byNum;
+          return CATEGORIES.find(
+            ([label, id]) => label.toLowerCase() === p || id === p
+          )?.[1];
+        })
         .filter(Boolean) as string[];
-      if (!ids.length) return ctx.reply("No valid numbers — try like `1,3`.");
+      if (!ids.length)
+        return ctx.reply(
+          "I didn't catch that — reply with numbers like `1,3`, or names like `Plumbing, Cleaning`."
+        );
       d.categories = JSON.stringify(ids);
       s.step = "zones";
       await ctx.reply(
@@ -194,24 +206,38 @@ bot.on("message:text", async (ctx, next) => {
           ZONES.map((z, i) => `${i + 1}. ${z}`).join("\n")
       );
     } else if (s.step === "zones") {
-      const ids = text
-        .split(",")
-        .map((n) => ZONE_IDS[Number(n.trim()) - 1])
-        .filter(Boolean);
-      if (!ids.length) return ctx.reply("No valid numbers — try like `1,2`.");
+      const parts = text.split(",").map((n) => n.trim().toLowerCase()).filter(Boolean);
+      const ids = parts
+        .map((p) => {
+          const byNum = ZONE_IDS[Number(p) - 1];
+          if (byNum) return byNum;
+          const zi = ZONES.findIndex((z) => z.toLowerCase() === p);
+          return zi >= 0 ? ZONE_IDS[zi] : undefined;
+        })
+        .filter(Boolean) as string[];
+      if (!ids.length)
+        return ctx.reply(
+          "I didn't catch that — reply with numbers like `1,2`, or names like `Gwarinpa, Jabi`."
+        );
       d.zones = JSON.stringify(ids);
       s.step = "phone";
       await ctx.reply("Your phone number (customers will reach you on it)?", {
         reply_markup: new Keyboard().requestContact("📱 Share my number").text("❌ Cancel").resized(),
       });
     } else if (s.step === "phone") {
+      const digits = text.replace(/\D/g, "");
+      if (digits.length < 5)
+        return ctx.reply("That doesn't look like a phone number — please type it again (e.g. 0803...).");
       d.phone = text;
       s.step = "skill";
       await ctx.reply("Briefly describe your experience (or /skip).", {
         reply_markup: cancelKb,
       });
     } else if (s.step === "skill") {
-      d.skillNote = text === "/skip" ? "" : text;
+      if (/^\/skip$/i.test(text)) d.skillNote = "";
+      else if (text.length < 3)
+        return ctx.reply("A little more detail please (or /skip).");
+      else d.skillNote = text;
       try {
         await api("/providers/provider-applications", {
           method: "POST",
