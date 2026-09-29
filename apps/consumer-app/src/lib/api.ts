@@ -7,7 +7,12 @@ export const API_URL = "http://192.168.1.13:3001";
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
+    headers: {
+      "content-type": "application/json",
+      // Server-to-server: identify origin so Better Auth's CSRF check passes.
+      origin: API_URL,
+      ...(init?.headers ?? {}),
+    },
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((body as { error?: string }).error ?? `API ${res.status}`);

@@ -35,7 +35,12 @@ bot.use(session({ initial: (): Draft => ({}), storage: new FileAdapter({ dirName
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     ...init,
-    headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
+    headers: {
+      "content-type": "application/json",
+      // Server-to-server: identify origin so Better Auth's CSRF check passes.
+      origin: API,
+      ...(init?.headers ?? {}),
+    },
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((body as { error?: string }).error ?? `API ${res.status}`);

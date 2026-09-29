@@ -9,9 +9,18 @@ const adapter = new PrismaBetterSqlite3({
 });
 const prisma = new PrismaClient({ adapter });
 
+const publicURL = process.env.PUBLIC_API_URL ?? "http://localhost:3001";
+const extraOrigins = (process.env.TRUSTED_ORIGINS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 export const auth = betterAuth({
-  baseURL: process.env.PUBLIC_API_URL ?? "http://localhost:3001",
+  baseURL: publicURL,
   secret: process.env.BETTER_AUTH_SECRET ?? "dev-only-change-me",
+  // Bot + app call these endpoints server-to-server (no browser Origin),
+  // so the API's own origins (localhost + phone LAN URL) must be trusted.
+  trustedOrigins: [publicURL, ...extraOrigins],
   database: prismaAdapter(prisma, { provider: "sqlite" }),
   plugins: [
     bearer(), // token auth for bot + app (no cookies on those clients)
