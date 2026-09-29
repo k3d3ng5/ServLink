@@ -69,7 +69,16 @@ async function showMenu(ctx: Ctx) {
   );
 }
 
-bot.command("start", async (ctx) => {
+bot.command("start", async (ctx) => handleEntry(ctx));
+
+// Greeting activation: typing Hi/Hello/Hey (or morning greetings) wakes the
+// bot exactly like START. Ignored mid-conversation so wizard inputs are safe.
+bot.hears(/^(hi+|hello+|hey+|yo|good\s?(morning|afternoon|evening)|start|begin)\b/i, async (ctx) => {
+  if (ctx.session.flow) return;
+  await handleEntry(ctx);
+});
+
+async function handleEntry(ctx: Ctx) {
   ctx.session = {};
   const chatId = String(ctx.chat?.id);
   try {
@@ -85,7 +94,7 @@ bot.command("start", async (ctx) => {
     "Welcome to ServLink 🔐\nLog in with your email to continue — I'll send a one-time code.",
     { reply_markup: cancelKb }
   );
-});
+}
 
 bot.hears("❌ Cancel", async (ctx) => {
   const wasLoggedIn = Boolean(ctx.session.email);
