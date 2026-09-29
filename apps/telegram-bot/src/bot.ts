@@ -491,6 +491,11 @@ function isAdmin(ctx: Ctx) {
   return ADMIN_IDS.includes(String(ctx.chat?.id));
 }
 
+// Anyone may ask: replies with your numeric chat id. Use it for ADMIN_CHAT_IDS.
+bot.command("myid", async (ctx) => {
+  await ctx.reply(`Your chat id is \`${ctx.chat?.id}\``, { parse_mode: "Markdown" });
+});
+
 bot.command("pending", async (ctx) => {
   if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
   const { requests } = await api<{
