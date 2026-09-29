@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@grammyjs/storage-file": "^2.6.0",
     "@servlink/adapter-kit": "0.1.0",
     "@servlink/core-domain": "0.1.0",
     "dotenv": "^16.4.0",

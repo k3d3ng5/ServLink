@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Suggestion } from "@/lib/api";
 
@@ -28,13 +29,15 @@ export function MatchPanel({
 }) {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
   async function run(label: string, fn: () => Promise<unknown>) {
     setBusy(true);
     setMsg("");
     try {
       await fn();
-      setMsg(`${label} ✓ — refresh to see the new state.`);
+      setMsg(`${label} ✓`);
+      router.refresh();
     } catch (e) {
       setMsg(`${label} failed: ${(e as Error).message}`);
     } finally {

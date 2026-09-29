@@ -99,6 +99,17 @@ model Job {
   followUps FollowUp[]
   ratings   Rating[]
   reworks   ReworkTicket[]
+  offers    JobOffer[]
+}
+
+model JobOffer {
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id])
+  providerId String
+  status     String   @default("pending") // pending | accepted | declined | expired
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
 }
 
 model StatusEvent {

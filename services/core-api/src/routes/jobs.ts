@@ -1,5 +1,7 @@
 import { Router } from "express";
+import { z } from "zod";
 import { db } from "../db.js";
+import { dispatchNext } from "../dispatch.js";
 import {
   FollowUpResponseSchema,
   FollowUpSchema,
@@ -9,6 +11,44 @@ import {
 import { applyTransition } from "../transitions.js";
 
 export const jobs = Router();
+
+// POST /jobs/:id/accept { actor: customer|provider } — offer accepted, job confirmed.
+jobs.post("/:id/accept", async (req, res, next) => {
+  try {
+    const { actor } = z.object({ actor: z.enum(["customer", "provider"]) }).parse(req.body);
+    await db.jobOffer.updateMany({
+      where: { jobId: req.params.id, status: "pending" },
+      data: { status: "accepted" },
+    });
+    const result = await applyTransition(req.params.id, "CONFIRMED", actor);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /jobs/:id/decline { actor } — provider decline auto-escalates to the next
+// suggestion; customer decline cancels. The founder is only pinged when automation
+// runs out of providers.
+jobs.post("/:id/decline", async (req, res, next) => {
+  try {
+    const { actor } = z.object({ actor: z.enum(["customer", "provider"]) }).parse(req.body);
+    await db.jobOffer.updateMany({
+      where: { jobId: req.params.id, status: "pending" },
+      data: { status: "declined" },
+    });
+    if (actor === "customer") {
+      const result = await applyTransition(req.params.id, "CANCELLED", "customer");
+      return res.json(result);
+    }
+    const job = await db.job.findUnique({ where: { id: req.params.id } });
+    if (!job) return res.status(404).json({ error: "not found" });
+    const nextJob = await dispatchNext(job.requestId);
+    res.json({ escalatedTo: nextJob?.id ?? null });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // POST /jobs/:id/followup — manual follow-up prompt (worker also calls this path).
 jobs.post("/:id/followup", async (req, res, next) => {

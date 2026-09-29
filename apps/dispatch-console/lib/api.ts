@@ -45,6 +45,13 @@ export interface AppItem {
   createdAt: string;
 }
 
+export interface Analytics {
+  perDay: Record<string, number>;
+  avgMatchSecs: number;
+  funnel: Record<string, number>;
+  leaderboard: Array<{ name: string; jobs: number; completed: number; avgRating: number | null }>;
+}
+
 export const api = {
   queue: () => req<{ requests: QueueItem[] }>("/requests?status=REQUESTED"),
   allRequests: () => req<{ requests: QueueItem[] }>("/requests"),
@@ -78,4 +85,5 @@ export const api = {
       confirmedOk: number;
       byChannel: { app: number; telegram: number };
     }>("/metrics"),
+  analytics: () => req<Analytics>("/metrics/analytics"),
 };

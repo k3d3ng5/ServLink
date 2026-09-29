@@ -11,6 +11,7 @@ const NAV = [
   ["Queue", "/"],
   ["Applications", "/applications"],
   ["Metrics", "/metrics"],
+  ["Analytics", "/analytics"],
 ] as const;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

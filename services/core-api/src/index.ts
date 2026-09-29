@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { auth } from "./auth.js";
+import { startDispatchWorker } from "./dispatch.js";
 import { startFollowUpWorker } from "./followup.js";
 import { authRoutes } from "./routes/auth.js";
 import { jobs } from "./routes/jobs.js";
@@ -57,3 +58,4 @@ app.use(
 const port = Number(process.env.PORT ?? 3001);
 app.listen(port, () => console.log(`core-api listening on :${port}`));
 startFollowUpWorker();
+startDispatchWorker();

@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FileAdapter } from "@grammyjs/storage-file";
 import { Bot, Context, Keyboard, session, SessionFlavor } from "grammy";
 
 const API = process.env.CORE_API_URL ?? "http://localhost:3001";
@@ -28,7 +29,8 @@ interface Draft {
 type Ctx = Context & SessionFlavor<Draft>;
 
 const bot = new Bot<Ctx>(process.env.TELEGRAM_BOT_TOKEN ?? "");
-bot.use(session({ initial: (): Draft => ({}) }));
+// File-backed sessions: logins survive bot restarts (gitignored .sessions/).
+bot.use(session({ initial: (): Draft => ({}), storage: new FileAdapter({ dirName: ".sessions" }) }));
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API}${path}`, {
@@ -425,9 +427,9 @@ bot.on("callback_query:data", async (ctx, next) => {
   const [, jobId, role, verdict] = m;
   try {
     if (verdict === "ok") {
-      await api(`/requests/jobs/${jobId}/transition`, {
+      await api(`/jobs/${jobId}/accept`, {
         method: "POST",
-        body: JSON.stringify({ to: "CONFIRMED", actor: role }),
+        body: JSON.stringify({ actor: role }),
       });
       await ctx.answerCallbackQuery(role === "provider" ? "Job accepted — customer notified." : "Confirmed — see you soon!");
       await ctx.editMessageText(
@@ -436,12 +438,18 @@ bot.on("callback_query:data", async (ctx, next) => {
           : "✅ Booking confirmed. Your provider is on the way."
       );
     } else if (role === "provider") {
-      await ctx.answerCallbackQuery("Declined — ServLink will reassign.");
-      await ctx.editMessageText("❌ You declined this job. ServLink will reassign it.");
-    } else {
-      await api(`/requests/jobs/${jobId}/transition`, {
+      const r = (await api(`/jobs/${jobId}/decline`, {
         method: "POST",
-        body: JSON.stringify({ to: "CANCELLED", actor: "customer" }),
+        body: JSON.stringify({ actor: "provider" }),
+      })) as { escalatedTo: string | null };
+      await ctx.answerCallbackQuery(
+        r.escalatedTo ? "Declined — passed to the next provider." : "Declined — ServLink will find someone."
+      );
+      await ctx.editMessageText("❌ You declined this job. It has been reassigned.");
+    } else {
+      await api(`/jobs/${jobId}/decline`, {
+        method: "POST",
+        body: JSON.stringify({ actor: "customer" }),
       });
       await ctx.answerCallbackQuery("Request cancelled.");
       await ctx.editMessageText("❌ Request cancelled. Tap 🛠 anytime to book again.");
@@ -546,8 +554,30 @@ bot.command("match", async (ctx) => {
   }
 });
 
-bot.command("done", async (ctx) => {
+bot.command("stats", async (ctx) => {
   if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
+  try {
+    const a = await api<{
+      perDay: Record<string, number>;
+      avgMatchSecs: number;
+      funnel: Record<string, number>;
+      leaderboard: Array<{ name: string; jobs: number; completed: number; avgRating: number | null }>;
+    }>("/metrics/analytics");
+    const funnel = Object.entries(a.funnel).map(([k, v]) => `${k}: ${v}`).join("\n");
+    const board =
+      a.leaderboard.map((p) => `• ${p.name}: ${p.jobs} jobs, ${p.completed} done${p.avgRating ? `, ★${p.avgRating}` : ""}`).join("\n") ||
+      "No providers yet.";
+    const days = Object.entries(a.perDay).slice(-7).map(([d, n]) => `${d}: ${n}`).join("\n") || "No requests yet.";
+    await ctx.reply(
+      `📊 *ServLink analytics*\n\nAvg match time: ${a.avgMatchSecs}s\n\n*Funnel*\n${funnel}\n\n*Providers*\n${board}\n\n*Last days*\n${days}`,
+      { parse_mode: "Markdown" }
+    );
+  } catch (e) {
+    await ctx.reply(`Failed: ${(e as Error).message}`);
+  }
+});
+
+bot.command("done", async (ctx) => {  if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
   const req8 = (ctx.match as string).trim();
   if (!req8) return ctx.reply("Usage: /done <requestRef>");
   try {

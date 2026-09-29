@@ -137,7 +137,7 @@ Product shape (locked): **ServLink App + execution core**, Telegram as one adapt
 
 **Goal:** make the human matcher fast and consistent — this is the "Manual" in manual matching.
 
-1. **Next.js internal app (auth-gated):** inbound queue (new requests, oldest first, zone/category badges) → provider suggest panel (filter by category+zone, show tier/availability/notes) → one-click match → confirmation preview (exact message the customer will see) → job board (kanban by state) → follow-up inbox (responses needing action) → rework queue → **provider applications inbox (approve → tier Basic / reject with reason)**.
+1. **Next.js internal app (auth-gated, reports-first — matching is automatic):** inbound queue (all requests with live states) → request detail (suggestion ranking shown for transparency + manual override Match) → job board by state → follow-up inbox → rework queue → provider applications inbox → **metrics + analytics pages (the founder's daily view)**.
 2. **SOP embedded:** matching SLA timer visible per request (2-hour validation threshold, PRD Sec 11); escalation highlight past 60 min unmatched.
 3. **Exit criteria:** founder matches 5 staged requests in <5 min each; every action writes `status_events` with `actor=concierge`.
 
@@ -188,7 +188,7 @@ Product shape (locked): **ServLink App + execution core**, Telegram as one adapt
    - Target: 5–10 approved providers, minimum 2 each in Plumbing + Electrical, covering Gwarinpa, Wuse 2, Jabi first; Maitama/Asokoro once matched.
    - Verification stays human in the MVP (call references, confirm identity + skill evidence) — self-registration removes founder data-entry, not founder judgment. Never seed fake providers (PRD Sec 18).
 2. **Demand:** launch to beachhead (new residents/renters channels: estate groups, relocation contacts) — App APK + Telegram link side by side.
-3. **Concierge SOP (`docs/runbooks/concierge.md`):** shift coverage, match SLA, confirmation script, no-show protocol, dispute handling, rework dispatch, end-of-day log review.
+3. **Concierge SOP (`docs/runbooks/concierge.md`):** automation handles matching (offer → accept/decline → escalate, 5-min windows, max 3 offers); humans handle only exceptions flagged by admin alerts (no online providers, offers exhausted, reworks, disputes), approval of provider applications, end-of-day metrics review.
 4. **Support:** one human phone line + Telegram fallback during pilot hours; every complaint becomes a `rework_ticket` or logged feedback.
 5. **Weekly verdict:** score 70/70/70 + repeat-intent; kill-criteria check; findings written back into PRD Part B (the living-document rule).
 6. **Exit criteria (pilot success = PRD Sec 11):** ≥70% matched <2h, ≥70% completed, ≥70% confirmed OK, ≥3 would reuse — then greenlight Marketplace MVP (Phase 2 roadmap).

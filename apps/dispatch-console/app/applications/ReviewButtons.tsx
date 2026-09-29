@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const BASE = process.env.NEXT_PUBLIC_CORE_API_URL ?? "http://localhost:3001";
 
 export function ReviewButtons({ id }: { id: string }) {
   const [msg, setMsg] = useState("");
+  const router = useRouter();
   async function review(decision: "approve" | "reject") {
     setMsg("");
     const res = await fetch(`${BASE}/providers/provider-applications/${id}/review`, {
@@ -13,7 +15,10 @@ export function ReviewButtons({ id }: { id: string }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ decision, reviewedBy: "console" }),
     });
-    setMsg(res.ok ? `${decision}d ✓ — refresh.` : `Failed: ${res.status}`);
+    if (res.ok) {
+      setMsg(`${decision}d ✓`);
+      router.refresh();
+    } else setMsg(`Failed: ${res.status}`);
   }
   return (
     <div className="mt-3 flex items-center gap-2">
