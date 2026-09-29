@@ -207,3 +207,24 @@ model Verification {
 
   @@map("verification")
 }
+
+// Assistant chat sessions (Groq chatbot driving the same request workflow).
+model ChatSession {
+  id        String        @id @default(cuid())
+  email     String?
+  channel   String        @default("app")
+  state     String        @default("{}") // JSON: collected slots
+  requestId String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String      // user | assistant | system-note
+  content   String
+  createdAt DateTime    @default(now())
+}

@@ -15,9 +15,10 @@
     "@prisma/adapter-better-sqlite3": "latest",
     "@prisma/client": "latest",
     "@servlink/core-domain": "0.1.0",
-    "better-sqlite3": "latest",
     "better-auth": "latest",
+    "better-sqlite3": "latest",
     "express": "^4.21.0",
+    "groq-sdk": "^1.6.0",
     "resend": "latest",
     "zod": "^3.23.0"
   },

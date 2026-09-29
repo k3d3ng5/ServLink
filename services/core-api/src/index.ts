@@ -3,6 +3,7 @@ import express from "express";
 import { auth } from "./auth.js";
 import { startDispatchWorker } from "./dispatch.js";
 import { startFollowUpWorker } from "./followup.js";
+import { assistantRoutes } from "./routes/assistant.js";
 import { authRoutes } from "./routes/auth.js";
 import { jobs } from "./routes/jobs.js";
 import { metrics } from "./routes/metrics.js";
@@ -21,6 +22,7 @@ app.use("/jobs", jobs);
 app.use("/providers", providers);
 app.use("/metrics", metrics);
 app.use("/auth", authRoutes);
+app.use("/assistant", assistantRoutes);
 
 // Better Auth handler (email-OTP endpoints: /api/auth/email-otp/...)
 // Note: req.originalUrl keeps the /api/auth prefix the handler routes on.

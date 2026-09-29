@@ -19,7 +19,8 @@ function Menu({ email }: { email: string }) {
     <View style={s.screen}>
       <Text style={s.title}>Tell ServLink.{"\n"}We&apos;ll help get it done.</Text>
       <Text style={s.sub}>Logged in as {email}</Text>
-      <Link href="/request" asChild><Btn label="🛠 New service request" onPress={() => {}} /></Link>
+      <Link href="/chat" asChild><Btn label="💬 Chat with ServLink" onPress={() => {}} /></Link>
+      <Link href="/request" asChild><Btn label="🛠 New service request (form)" onPress={() => {}} tone="ghost" /></Link>
       <Link href="/jobs" asChild><Btn label="📦 My jobs" onPress={() => {}} tone="ghost" /></Link>
       {isPro && (
         <Link href="/pro" asChild><Btn label="🧰 ServLink Pro" onPress={() => {}} tone="ghost" /></Link>

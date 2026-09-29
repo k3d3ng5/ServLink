@@ -36,6 +36,11 @@ export interface RequestView {
 }
 
 export const api = {
+  chat: (b: { sessionId?: string; email?: string; channel?: string; message: string; latitude?: number; longitude?: number }) =>
+    req<{ sessionId: string; reply: string; quickReplies: string[]; requestId: string | null; done: boolean }>(
+      "/assistant/chat",
+      { method: "POST", body: JSON.stringify(b) }
+    ),
   proMe: () =>
     req<{
       provider: {
