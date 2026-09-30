@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 import { session } from "../session";
 import { CATEGORIES, colors } from "../theme";
 import { Btn, Field, s } from "../ui";
+import { TabBar } from "../tabs";
 
 function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
@@ -70,7 +71,8 @@ export default function RequestScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
+    <View style={{ flex: 1, backgroundColor: "#FAF7F0" }}>
+      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
       {step === 0 && (
         <>
           <Text style={s.title}>What needs doing?</Text>
@@ -99,6 +101,8 @@ export default function RequestScreen() {
       )}
       {err ? <Text style={s.error}>{err}</Text> : null}
       {step > 0 && <Btn label="← Back" onPress={() => { setStep(step - 1); setErr(""); }} tone="ghost" />}
-    </ScrollView>
+      </ScrollView>
+      <TabBar />
+    </View>
   );
 }

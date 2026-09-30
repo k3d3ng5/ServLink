@@ -4,6 +4,7 @@ import { Link, useFocusEffect } from "expo-router";
 import { api, type RequestView } from "../lib/api";
 import { session } from "../session";
 import { EmptyState, StatusChip } from "../components";
+import { TabBar } from "../tabs";
 import { s } from "../ui";
 
 export default function Jobs() {
@@ -22,7 +23,8 @@ export default function Jobs() {
   );
 
   return (
-    <View style={s.screen}>
+    <View style={{ flex: 1, backgroundColor: "#FAF7F0" }}>
+      <View style={[s.screen, { flex: 1 }]}>
       <Text style={s.title}>My jobs</Text>
       {err ? <Text style={s.error}>{err}</Text> : null}
       <FlatList
@@ -42,6 +44,8 @@ export default function Jobs() {
           </Link>
         )}
       />
+      </View>
+      <TabBar />
     </View>
   );
 }

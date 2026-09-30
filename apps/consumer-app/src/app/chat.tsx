@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 import { session } from "../session";
 import { colors } from "../theme";
 import { s } from "../ui";
+import { TabBar } from "../tabs";
 
 interface Msg {
   id: string;
@@ -74,7 +75,8 @@ export default function Chat() {
   const fresh = msgs.length === 0;
 
   return (
-    <View style={[s.screen, { paddingBottom: 12 }]}>
+    <View style={{ flex: 1, backgroundColor: colors.paper }}>
+      <View style={[s.screen, { flex: 1, paddingBottom: 12 }]}>
       {fresh ? (
         <View style={{ flex: 1, justifyContent: "center", gap: 16 }}>
           <View style={{ alignItems: "center", gap: 6 }}>
@@ -160,6 +162,8 @@ export default function Chat() {
           <Text style={{ fontWeight: "800", color: colors.ink }}>View my job →</Text>
         </Pressable>
       )}
+      </View>
+      <TabBar />
     </View>
   );
 }

@@ -6,13 +6,24 @@ import {
   useFonts as usePlayfair,
 } from "@expo-google-fonts/playfair-display";
 import { Inter_400Regular, Inter_600SemiBold, useFonts as useInter } from "@expo-google-fonts/inter";
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  useFonts as useJakarta,
+} from "@expo-google-fonts/plus-jakarta-sans";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function Layout() {
   const [playfair] = usePlayfair({ PlayfairDisplay_700Bold });
   const [inter] = useInter({ Inter_400Regular, Inter_600SemiBold });
-  const ready = playfair && inter;
+  const [jakarta] = useJakarta({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+  });
+  const ready = playfair && inter && jakarta;
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -28,6 +39,7 @@ export default function Layout() {
       <Stack.Screen name="request" options={{ title: "New request" }} />
       <Stack.Screen name="jobs" options={{ title: "My jobs" }} />
       <Stack.Screen name="pro" options={{ title: "ServLink Pro" }} />
+      <Stack.Screen name="profile" options={{ title: "Privilege" }} />
       <Stack.Screen name="job/[id]" options={{ title: "Job detail" }} />
     </Stack>
   );

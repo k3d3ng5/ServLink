@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { Link, useFocusEffect } from "expo-router";
 import { api } from "../lib/api";
 import { session } from "../session";
 import { EmptyState, StatusChip } from "../components";
+import { TabBar } from "../tabs";
 import { colors } from "../theme";
 import { Btn, s } from "../ui";
 
@@ -46,7 +47,8 @@ export default function Pro() {
   if (!pro) return <View style={s.screen}><Text style={s.sub}>Loading…</Text></View>;
 
   return (
-    <View style={s.screen}>
+    <View style={{ flex: 1, backgroundColor: "#FAF7F0" }}>
+      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
       <View style={[s.card, { alignItems: "center", gap: 8, paddingVertical: 18 }]}>
         <Text style={{ fontSize: 15, color: "#6B7280" }}>{pro.isOnline ? "You're visible to nearby jobs" : "You're hidden from new jobs"}</Text>
         <Text style={{ fontSize: 22, fontWeight: "800", color: pro.isOnline ? colors.brand : "#6B7280" }}>
@@ -66,6 +68,8 @@ export default function Pro() {
           </Pressable>
         </Link>
       ))}
+      </ScrollView>
+      <TabBar />
     </View>
   );
 }
