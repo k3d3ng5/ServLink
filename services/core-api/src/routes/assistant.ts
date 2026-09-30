@@ -1,8 +1,21 @@
 import { Router } from "express";
 import { z } from "zod";
+import Groq from "groq-sdk";
 import { chat } from "../assistant.js";
 
 export const assistantRoutes = Router();
+
+// GET /assistant/models — models this key may call (dev/admin).
+assistantRoutes.get("/models", async (_req, res, next) => {
+  try {
+    if (!process.env.GROQ_API_KEY) return res.status(503).json({ error: "no key" });
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const list = await groq.models.list();
+    res.json({ models: list.data.map((m) => m.id) });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // POST /assistant/chat — Groq chatbot driving the standard request workflow.
 assistantRoutes.post("/chat", async (req, res, next) => {

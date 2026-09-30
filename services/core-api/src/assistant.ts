@@ -3,13 +3,12 @@ import { db } from "./db.js";
 import { nearestZone } from "./geo.js";
 import { notifyAdmins } from "./notify.js";
 
-const MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
+const MODEL = process.env.GROQ_MODEL ?? "openai/gpt-oss-20b";
 
 const SYSTEM = `You are ServLink, a friendly home-service assistant in Abuja, Nigeria. Plain Nigerian-English, short messages, one question at a time.
-Collect, in order: (1) what needs doing (description), (2) category — one of: plumbing, electrical, ac-hvac, cleaning, generator-solar, handyman, moving, auto-assistance, (3) street address or landmark, (4) phone number.
-GPS coordinates may already be provided — never ask for location twice if present. Never ask for area/zone — the system assigns it.
-When all four slots are filled, summarize and ask for YES to confirm. After YES, call submit_request. After submission, tell the user a provider will be assigned and they will be notified.
-If the user wants to cancel, acknowledge and stop. Keep every reply under 40 words.`;
+You collect four things, strictly in order, never moving on until each is answered: (1) what needs doing (description), (2) category — one of: plumbing, electrical, ac-hvac, cleaning, generator-solar, handyman, moving, auto-assistance, (3) street address or landmark, (4) phone number.
+Rules: NEVER call any tool until all four are known AND the user has confirmed with YES. If anything is missing, ask for the next missing item in plain text with no tool call. GPS coordinates may already be provided — never ask for location twice if present. Never ask for area/zone — the system assigns it.
+After YES with all four slots, summarize once more, then call submit_request exactly once. If the user wants to cancel, acknowledge and stop. Keep every reply under 40 words.`;
 
 const SUBMIT_TOOL = {
   type: "function" as const,
@@ -81,19 +80,70 @@ export async function chat(input: {
   const history = (await db.chatMessage.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "asc" }, take: 20 }))
     .map((m) => ({ role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant", content: m.content }));
 
-  const completion = await groq.chat.completions.create({
-    model: MODEL,
-    messages: [{ role: "system", content: SYSTEM }, ...history],
-    tools: [SUBMIT_TOOL],
-    tool_choice: "auto",
-    temperature: 0.3,
-    max_tokens: 200,
-  });
-
-  const msg = completion.choices[0]?.message;
+  let msg;
+  try {
+    const completion = await groq.chat.completions.create({
+      model: MODEL,
+      messages: [{ role: "system", content: SYSTEM }, ...history],
+      tools: [SUBMIT_TOOL],
+      tool_choice: "auto",
+      temperature: 0.3,
+      max_tokens: 200,
+    });
+    msg = completion.choices[0]?.message;
+  } catch (e) {
+    // Eager/invalid tool calls (e.g. empty args) fall back to plain chat.
+    const retry = await groq.chat.completions.create({
+      model: MODEL,
+      messages: [{ role: "system", content: SYSTEM }, ...history],
+      temperature: 0.3,
+      max_tokens: 200,
+    });
+    msg = retry.choices[0]?.message;
+    console.log("[assistant] tool retry:", (e as Error).message?.slice(0, 120));
+  }
   const call = msg?.tool_calls?.[0];
   if (call && "function" in call) {
     const args = JSON.parse(call.function.arguments || "{}") as Record<string, string>;
+    // Server-side slot validation — small models hallucinate; never trust blindly.
+    const validCategory = [
+      "plumbing", "electrical", "ac-hvac", "cleaning",
+      "generator-solar", "handyman", "moving", "auto-assistance",
+    ].includes(args.categoryId);
+    const have = {
+      description: typeof args.description === "string" && args.description.trim().length >= 3,
+      categoryId: validCategory,
+      address: typeof args.address === "string" && args.address.trim().length >= 3,
+      phone: typeof args.phone === "string" && args.phone.replace(/\D/g, "").length >= 5,
+    };
+    const lastUser = [...history].reverse().find((h) => h.role === "user")?.content ?? "";
+    const saidYes = /^yes\b/i.test(lastUser.trim());
+    if (!have.description || !have.categoryId || !have.address || !have.phone || !saidYes) {
+      // Park what we got, ask for what's missing — deterministic, not model-driven.
+      await db.chatSession.update({
+        where: { id: session.id },
+        data: { state: JSON.stringify({ ...slots, ...args }) },
+      });
+      const ask = !have.description
+        ? "What needs doing? Describe it briefly."
+        : !have.categoryId
+          ? "What kind of work is it? Plumbing, Electrical, AC / HVAC, Cleaning, Generator / Solar, Handyman, Moving, or Auto assistance?"
+          : !have.address
+            ? "What street address or landmark?"
+            : !have.phone
+              ? "What phone number should the provider call?"
+              : `Got it: ${args.description} (${args.categoryId}) at ${args.address}, ${args.phone}. Reply YES to confirm.`;
+      await db.chatMessage.create({ data: { sessionId: session.id, role: "assistant", content: ask } });
+      return {
+        sessionId: session.id,
+        reply: ask,
+        quickReplies: !have.categoryId
+          ? ["Plumbing", "Electrical", "AC / HVAC", "Cleaning", "Generator / Solar", "Handyman", "Moving", "Auto assistance"]
+          : [],
+        requestId: session.requestId,
+        done: false,
+      };
+    }
     const zoneId =
       slots.latitude !== undefined
         ? nearestZone({ latitude: slots.latitude as number, longitude: slots.longitude as number })
