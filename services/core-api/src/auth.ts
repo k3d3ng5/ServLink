@@ -34,7 +34,7 @@ export const auth = betterAuth({
               "content-type": "application/json",
             },
             body: JSON.stringify({
-              from: process.env.RESEND_FROM ?? "ServLink <noreply@servlink.app>",
+              from: process.env.RESEND_FROM ?? "ServLink <onboarding@resend.dev>",
               to: [email],
               subject: `Your ServLink code: ${otp}`,
               text: `Your ServLink login code is ${otp} (${type}). It expires in 10 minutes.`,
