@@ -1,8 +1,18 @@
-// API client — same core as bot + console. Pilot: dev machine on LAN.
-// Expo Go phones can't reach localhost: set your machine's LAN IP here.
+// API client — same core as bot + console.
+// Base URL auto-follows the Metro host: Expo Go loads the bundle from the
+// laptop's current LAN IP, and the API sits on port 3001 of that same host.
+// No more hardcoded IPs (DHCP drift broke this three times).
+import Constants from "expo-constants";
 import { session } from "../session";
 
-export const API_URL = "http://192.168.1.4:3001";
+function resolveBaseUrl(): string {
+  const hostUri = Constants.expoConfig?.hostUri ?? "";
+  const host = hostUri.split(":")[0];
+  if (host) return `http://${host}:3001`;
+  return "http://localhost:3001";
+}
+
+export const API_URL = resolveBaseUrl();
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
