@@ -27,7 +27,7 @@ export const auth = betterAuth({
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         if (process.env.RESEND_API_KEY) {
-          await fetch("https://api.resend.com/emails", {
+          const res = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
               authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -40,6 +40,9 @@ export const auth = betterAuth({
               text: `Your ServLink login code is ${otp} (${type}). It expires in 10 minutes.`,
             }),
           });
+          // Never log the OTP itself — status + Resend's error is enough to diagnose.
+          console.log(`[otp] send to ${email} via resend: ${res.status}`);
+          if (!res.ok) console.log(`[otp] resend error: ${(await res.text()).slice(0, 200)}`);
         } else {
           // No Resend key (dev): code goes to the server log, never to the client.
           console.log(`[otp] ${email} (${type}): ${otp}`);
