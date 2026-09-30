@@ -1,10 +1,12 @@
 :root {
-  --color-brand: #0B6B4F;
-  --color-brand-dark: #084A37;
-  --color-accent: #F2A007;
+  --color-brand: #0B3D2E;
+  --color-brand-dark: #062A20;
+  --color-accent: #C9A227;
+  --color-accent-soft: #F5ECD4;
   --color-ink: #14201C;
-  --color-paper: #FFFFFF;
-  --color-success: #1E9E6A;
-  --color-warning: #E8930C;
-  --color-danger: #D64545;
+  --color-paper: #FAF7F0;
+  --color-muted: #6B7280;
+  --color-success: #1E7A4F;
+  --color-danger: #B4433A;
+  --color-border: #E7DFC9;
 }

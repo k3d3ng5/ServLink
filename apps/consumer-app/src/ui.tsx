@@ -1,35 +1,52 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { colors } from "./theme";
+import { colors, radii } from "./theme";
 
 export const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper, padding: 20, gap: 12 },
-  title: { fontSize: 24, fontWeight: "800", color: colors.ink },
+  title: { fontSize: 26, fontWeight: "800", color: colors.ink, fontFamily: "PlayfairDisplay_700Bold" },
   sub: { fontSize: 14, color: colors.muted },
-  card: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14, gap: 4 },
-  input: {
+  card: {
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: radii.card,
+    padding: 16,
+    gap: 6,
+    shadowColor: "#0B3D2E",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  input: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.button,
+    padding: 14,
     fontSize: 16,
     color: colors.ink,
   },
   error: { color: colors.danger, fontSize: 13 },
+  divider: { height: 1, backgroundColor: colors.accent, opacity: 0.4 },
 });
 
-export function Btn({ label, onPress, tone = "brand" }: { label: string; onPress: () => void; tone?: "brand" | "ghost" | "danger" }) {
-  const bg = tone === "brand" ? colors.brand : tone === "danger" ? colors.danger : "#fff";
-  const fg = tone === "ghost" ? colors.brand : "#fff";
+export function Btn({ label, onPress, tone = "brand" }: { label: string; onPress: () => void; tone?: "brand" | "gold" | "ghost" | "danger" }) {
+  const bg =
+    tone === "brand" ? colors.brand : tone === "gold" ? colors.accent : tone === "danger" ? colors.danger : colors.card;
+  const fg = tone === "ghost" ? colors.brand : tone === "gold" ? colors.ink : "#fff";
   return (
     <Pressable
       onPress={onPress}
       style={{
         backgroundColor: bg,
-        borderRadius: 10,
-        padding: 14,
+        borderRadius: radii.button,
+        padding: 15,
         alignItems: "center",
         borderWidth: tone === "ghost" ? 1 : 0,
-        borderColor: colors.brand,
+        borderColor: colors.accent,
+        minHeight: 52,
+        justifyContent: "center",
       }}
     >
       <Text style={{ color: fg, fontWeight: "700", fontSize: 16 }}>{label}</Text>
@@ -52,6 +69,7 @@ export function Field({ label, value, onChange, placeholder, multiline }: {
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
+        placeholderTextColor={colors.muted}
         multiline={multiline}
       />
     </View>
