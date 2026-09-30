@@ -17,12 +17,14 @@
     "@servlink/core-domain": "0.1.0",
     "better-auth": "latest",
     "better-sqlite3": "latest",
+    "cors": "^2.8.6",
     "express": "^4.21.0",
     "groq-sdk": "^1.6.0",
     "resend": "latest",
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^4.17.0",
     "@types/node": "^22.0.0",
     "prisma": "latest",

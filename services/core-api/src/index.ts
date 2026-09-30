@@ -1,4 +1,5 @@
 import "dotenv/config";
+import cors from "cors";
 import express from "express";
 import { auth } from "./auth.js";
 import { startDispatchWorker } from "./dispatch.js";
@@ -11,6 +12,7 @@ import { providers } from "./routes/providers.js";
 import { requests } from "./routes/requests.js";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.get("/health", (_req, res) => {
