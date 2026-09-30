@@ -1,11 +1,12 @@
 // API client — same core as bot + console.
-// Base URL auto-follows the Metro host: Expo Go loads the bundle from the
-// laptop's current LAN IP, and the API sits on port 3001 of that same host.
-// No more hardcoded IPs (DHCP drift broke this three times).
+// Resolution order: explicit build-time URL (standalone builds) → Metro host
+// (Expo Go dev) → localhost. No more hardcoded IPs.
 import Constants from "expo-constants";
 import { session } from "../session";
 
 function resolveBaseUrl(): string {
+  const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string };
+  if (extra.apiUrl) return extra.apiUrl;
   const hostUri = Constants.expoConfig?.hostUri ?? "";
   const host = hostUri.split(":")[0];
   if (host) return `http://${host}:3001`;
