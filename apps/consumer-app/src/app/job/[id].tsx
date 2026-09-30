@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from "react-native";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { api, type RequestView } from "../../lib/api";
 import { Btn, s } from "../../ui";
+import { EmptyState, StatusChip } from "../../components";
 import { colors } from "../../theme";
 
 export default function JobDetail() {
@@ -30,8 +31,8 @@ export default function JobDetail() {
     <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
       <Text style={s.title}>{req.description}</Text>
       <Text style={s.sub}>{req.zoneId} · {req.address}</Text>
-      <View style={s.card}>
-        <Text style={{ fontWeight: "800", fontSize: 18, color: colors.brandDark }}>{req.status}</Text>
+      <View style={[s.card, { gap: 8 }]}>
+        <StatusChip status={req.status} />
         {job && <Text style={s.sub}>Provider: {job.provider.name}</Text>}
       </View>
 

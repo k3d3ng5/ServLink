@@ -21,6 +21,13 @@
     "plugins": [
       "expo-router",
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0de8bc45-55d6-4cd2-b9e5-979cdfab4d9b"
+      }
+    },
+    "owner": "yaxx"
   }
 }

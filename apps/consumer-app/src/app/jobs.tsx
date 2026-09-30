@@ -3,7 +3,7 @@ import { FlatList, Pressable, Text, View } from "react-native";
 import { Link, useFocusEffect } from "expo-router";
 import { api, type RequestView } from "../lib/api";
 import { session } from "../session";
-import { colors } from "../theme";
+import { EmptyState, StatusChip } from "../components";
 import { s } from "../ui";
 
 export default function Jobs() {
@@ -29,13 +29,14 @@ export default function Jobs() {
         data={items}
         keyExtractor={(r) => r.id}
         contentContainerStyle={{ gap: 10 }}
-        ListEmptyComponent={<Text style={s.sub}>No requests yet — create one from home.</Text>}
+        ListEmptyComponent={<EmptyState title="No jobs yet" sub="Create a request and it will appear here with live status." />}
         renderItem={({ item }) => (
           <Link href={`/job/${item.id}`} asChild>
-            <Pressable style={s.card}>
-              <Text style={{ fontWeight: "700", color: colors.ink }}>{item.description}</Text>
+            <Pressable style={[s.card, { gap: 8 }]}>
+              <Text style={{ fontWeight: "700", color: "#14201C" }}>{item.description}</Text>
+              <StatusChip status={item.status} />
               <Text style={s.sub}>
-                {item.zoneId} · {item.status}
+                {item.zoneId} · ref {item.id.slice(0, 8)}
               </Text>
             </Pressable>
           </Link>
