@@ -2,7 +2,7 @@
 // Expo Go phones can't reach localhost: set your machine's LAN IP here.
 import { session } from "../session";
 
-export const API_URL = "http://192.168.1.13:3001";
+export const API_URL = "http://192.168.1.9:3001";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
