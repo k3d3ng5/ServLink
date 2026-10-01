@@ -74,17 +74,19 @@ providers.post("/provider-applications", async (req, res, next) => {
         telegramChatId: body.telegramChatId,
         email: body.email,
         nin: body.nin,
+        idType: body.idType,
+        photoUrl: body.photoUrl,
         latitude: body.latitude,
         longitude: body.longitude,
         skillNote: body.skillNote,
-        photoUrl: body.photoUrl,
       },
     });
-    // Automated NIN gate: valid 11-digit NIN + phone auto-approves to Basic.
-    // True identity verification (licensed vendor) upgrades to Verified later.
+    // Automated ID gate: valid 11-digit NIN + ID document photo auto-approves
+    // to Basic. Either missing → human review. True identity verification
+    // (licensed vendor) upgrades to Verified later.
     // NOTE: raw NIN is held only for verification and never returned by any API.
     let autoApproved: { id: string } | null = null;
-    if (body.nin && /^\d{11}$/.test(body.nin)) {
+    if (body.nin && /^\d{11}$/.test(body.nin) && body.photoUrl) {
       try {
         autoApproved = await db.provider.create({
           data: {
@@ -129,6 +131,40 @@ providers.get("/provider-applications", async (req, res, next) => {
       orderBy: { createdAt: "asc" },
     });
     res.json({ applications: apps });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /provider-applications/:id/id-photo — streams the ID doc.
+// Storage model (pilot): the Telegram file vault. photoUrl "tg:<file_id>"
+// is resolved via Bot API getFile and proxied. R2 migration = change this
+// function only; callers keep working.
+providers.get("/provider-applications/:id/id-photo", async (req, res, next) => {
+  try {
+    const app = await db.providerApplication.findUnique({ where: { id: req.params.id } });
+    const fileId = app?.photoUrl?.startsWith("tg:") ? app.photoUrl.slice(3) : null;
+    if (!fileId || !process.env.TELEGRAM_BOT_TOKEN) {
+      return res.status(404).json({ error: "no ID photo on file" });
+    }
+    const info = (await (
+      await fetch(
+        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getFile?file_id=${encodeURIComponent(fileId)}`
+      )
+    ).json()) as { ok: boolean; result?: { file_path?: string } };
+    if (!info.ok || !info.result?.file_path) return res.status(404).json({ error: "telegram file gone" });
+    const file = await fetch(
+      `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${info.result.file_path}`
+    );
+    if (!file.ok || !file.body) return res.status(502).json({ error: "download failed" });
+    res.setHeader("content-type", file.headers.get("content-type") ?? "image/jpeg");
+    const reader = file.body.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(value);
+    }
+    res.end();
   } catch (err) {
     next(err);
   }

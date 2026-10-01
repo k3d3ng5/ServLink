@@ -51,6 +51,7 @@ model ProviderApplication {
   telegramChatId String?
   email        String?
   nin          String?   // raw NIN held only until verification; never returned by API
+  idType       String?   // nin_slip | voters_card | drivers_license | passport
   latitude     Float?
   longitude    Float?
   skillNote    String?

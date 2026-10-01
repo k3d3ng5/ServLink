@@ -380,35 +380,79 @@ bot.on("message:text", async (ctx, next) => {
         if (digits.length !== 11) return ctx.reply("NIN must be exactly 11 digits — check and retry, or /skip for manual review.");
         d.nin = digits;
       }
-      try {
-        const result = (await api("/providers/provider-applications", {
-          method: "POST",
-          body: JSON.stringify({
-            name: d.name,
-            phone: d.phone,
-            categories: JSON.parse(d.categories ?? "[]"),
-            zones: ["general"],
-            telegramChatId: String(ctx.chat?.id),
-            email: s.email,
-            nin: d.nin || undefined,
-            latitude: d.latitude !== undefined ? Number(d.latitude) : undefined,
-            longitude: d.longitude !== undefined ? Number(d.longitude) : undefined,
-            skillNote: d.skillNote || undefined,
-          }),
-        })) as { autoApproved?: { providerId: string } | null };
-        const email = s.email;
-        ctx.session = { email, isProvider: s.isProvider };
-        await ctx.reply(
-          result.autoApproved
-            ? "✅ Verified by NIN — you're approved and live! Tap 🟢 Go online when ready for jobs."
-            : "✅ Application received — under review. We'll message you here when approved.",
-          { reply_markup: menuKb(s.isProvider ?? false) }
-        );
-      } catch (e) {
-        await ctx.reply(`Couldn't save: ${(e as Error).message}. Try again.`);
-      }
+      s.step = "idtype";
+      await ctx.reply("Which valid ID will you show? (required)", {
+        reply_markup: new Keyboard()
+          .text("NIN slip")
+          .text("Voter's card")
+          .row()
+          .text("Driver's license")
+          .text("Int'l passport")
+          .resized(),
+      });
+    } else if (s.step === "idtype") {
+      const map: Record<string, string> = {
+        "nin slip": "nin_slip",
+        "voter's card": "voters_card",
+        "driver's license": "drivers_license",
+        "int'l passport": "passport",
+      };
+      const code = map[text.toLowerCase()];
+      if (!code) return ctx.reply("Please tap one of the four ID types.");
+      d.idType = code;
+      s.step = "idphoto";
+      await ctx.reply("Now send a clear *photo* of that ID document here.", {
+        reply_markup: cancelKb,
+        parse_mode: "Markdown",
+      });
+    } else if (s.step === "idphoto") {
+      return ctx.reply("Please send the ID as a photo (camera icon, not a file).");
     }
   }
+});
+
+async function submitProviderApplication(ctx: Ctx, photoFileId: string) {
+  const s = ctx.session;
+  const d = s.data ?? {};
+  try {
+    const result = (await api("/providers/provider-applications", {
+      method: "POST",
+      body: JSON.stringify({
+        name: d.name,
+        phone: d.phone,
+        categories: JSON.parse(d.categories ?? "[]"),
+        zones: ["general"],
+        telegramChatId: String(ctx.chat?.id),
+        email: s.email,
+        nin: d.nin || undefined,
+        idType: d.idType || undefined,
+        photoUrl: `tg:${photoFileId}`,
+        latitude: d.latitude !== undefined ? Number(d.latitude) : undefined,
+        longitude: d.longitude !== undefined ? Number(d.longitude) : undefined,
+        skillNote: d.skillNote || undefined,
+      }),
+    })) as { autoApproved?: { providerId: string } | null };
+    const email = s.email;
+    ctx.session = { email, isProvider: s.isProvider };
+    await ctx.reply(
+      result.autoApproved
+        ? "✅ ID + NIN verified — you're approved and live! Tap 🟢 Go online when ready for jobs."
+        : "✅ Application + ID received — under review. We'll message you here when approved.",
+      { reply_markup: menuKb(s.isProvider ?? false) }
+    );
+  } catch (e) {
+    await ctx.reply(`Couldn't save: ${(e as Error).message}. Try again.`);
+  }
+}
+
+bot.on("message:photo", async (ctx) => {
+  const s = ctx.session;
+  if (!s.email) return;
+  if (s.flow !== "provider" || s.step !== "idphoto") return;
+  const photos = ctx.msg.photo;
+  const best = photos.at(-1);
+  if (!best) return ctx.reply("Couldn't read that photo — try again.");
+  await submitProviderApplication(ctx, best.file_id);
 });
 
 bot.on("message:contact", async (ctx) => {

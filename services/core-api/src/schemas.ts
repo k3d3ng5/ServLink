@@ -75,10 +75,11 @@ export const ApplicationSchema = z.object({
   telegramChatId: z.string().optional(),
   email: z.string().email().optional(),
   nin: z.string().regex(/^\d{11}$/, "NIN must be exactly 11 digits").optional(),
+  idType: z.enum(["nin_slip", "voters_card", "drivers_license", "passport"]).optional(),
+  photoUrl: z.string().max(500).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   skillNote: z.string().max(1000).optional(),
-  photoUrl: z.string().url().max(1000).optional(),
 });
 export type Application = z.infer<typeof ApplicationSchema>;
 

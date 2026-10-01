@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, API_URL } from "@/lib/api";
 import { ReviewButtons } from "./ReviewButtons";
 
 export default async function ApplicationsPage() {
@@ -18,6 +18,19 @@ export default async function ApplicationsPage() {
               {(JSON.parse(a.zones || "[]") as string[]).join(", ")}
             </p>
             {a.skillNote && <p className="mt-1 text-sm">{a.skillNote}</p>}
+            <p className="mt-1 text-sm">
+              ID: <b>{a.idType ? a.idType.replace(/_/g, " ") : "not provided"}</b>
+              {a.photoUrl && (
+                <a
+                  href={`${API_URL}/providers/provider-applications/${a.id}/id-photo`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-2 text-emerald-700 underline"
+                >
+                  View ID
+                </a>
+              )}
+            </p>
             <ReviewButtons id={a.id} />
           </li>
         ))}

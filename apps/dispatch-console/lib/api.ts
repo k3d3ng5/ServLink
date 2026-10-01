@@ -46,6 +46,8 @@ export interface AppItem {
   categories: string;
   zones: string;
   skillNote: string | null;
+  idType: string | null;
+  photoUrl: string | null;
   status: string;
   createdAt: string;
 }
