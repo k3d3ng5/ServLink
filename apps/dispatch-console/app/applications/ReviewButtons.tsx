@@ -22,7 +22,7 @@ export function ReviewButtons({ id }: { id: string }) {
   }
   return (
     <div className="mt-3 flex items-center gap-2">
-      <button onClick={() => review("approve")} className="rounded bg-emerald-700 px-3 py-1 text-sm text-white">
+      <button onClick={() => review("approve")} className="rounded bg-[#0556ed] px-3 py-1 text-sm text-white">
         Approve
       </button>
       <button onClick={() => review("reject")} className="rounded border px-3 py-1 text-sm">

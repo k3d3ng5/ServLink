@@ -65,7 +65,7 @@ export function MatchPanel({
               <button
                 disabled={busy}
                 onClick={() => run("Matched", () => post(`/requests/${requestId}/match`, { providerId: s.providerId, matchedBy: "console" }))}
-                className="rounded bg-emerald-700 px-3 py-1 text-white disabled:opacity-50"
+                className="rounded bg-[#0556ed] px-3 py-1 text-white disabled:opacity-50"
               >
                 Match
               </button>
@@ -134,7 +134,7 @@ export function MatchPanel({
             <button
               disabled={busy}
               onClick={() => run("Bill sent", () => post(`/jobs/${jobId}/pay-init`, {}))}
-              className="rounded bg-emerald-700 px-3 py-1 text-sm text-white disabled:opacity-50"
+              className="rounded bg-[#0556ed] px-3 py-1 text-sm text-white disabled:opacity-50"
             >
               Send bill
             </button>

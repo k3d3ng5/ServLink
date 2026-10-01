@@ -22,7 +22,7 @@ export default async function QueuePage() {
               </div>
               <Link
                 href={`/requests/${r.id}`}
-                className="rounded bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white"
+                className="rounded bg-[#0556ed] px-3 py-1.5 text-sm font-medium text-white"
               >
                 Open
               </Link>

@@ -71,7 +71,7 @@ export default function RequestScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FAF7F0" }}>
+    <View style={{ flex: 1, backgroundColor: colors.paper }}>
       <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
       {step === 0 && (
         <>

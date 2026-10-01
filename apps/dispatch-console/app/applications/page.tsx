@@ -25,7 +25,7 @@ export default async function ApplicationsPage() {
                   href={`${API_URL}/providers/provider-applications/${a.id}/id-photo`}
                   target="_blank"
                   rel="noreferrer"
-                  className="ml-2 text-emerald-700 underline"
+                  className="ml-2 text-[#0556ed] underline"
                 >
                   View ID
                 </a>

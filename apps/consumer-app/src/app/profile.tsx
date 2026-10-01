@@ -24,7 +24,7 @@ export default function Profile() {
           <Text style={{ color: colors.goldSoft, fontSize: 11, letterSpacing: 2, fontWeight: "700" }}>
             SERVLINK PRIVILEGE
           </Text>
-          <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800", fontFamily: "PlayfairDisplay_700Bold" }}>
+          <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800", fontFamily: "Inter_700Bold" }}>
             {session.email}
           </Text>
           <Text style={{ color: colors.goldSoft, fontSize: 13 }}>
