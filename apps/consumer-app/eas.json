@@ -9,7 +9,7 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "SERVLINK_API_URL": "http://192.168.1.6:3001" }
+      "env": { "SERVLINK_API_URL": "https://projector-rolling-instruments-unknown.trycloudflare.com" }
     },
     "production": {
       "autoIncrement": true
