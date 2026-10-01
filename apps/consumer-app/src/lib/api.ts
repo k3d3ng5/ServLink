@@ -1,12 +1,19 @@
 // API client — same core as bot + console.
-// Resolution order: explicit build-time URL (standalone builds) → Metro host
-// (Expo Go dev) → localhost. No more hardcoded IPs.
+// Resolution order: explicit build-time URL (standalone builds) → public tunnel
+// (remote browsers viewing the tunneled web app) → Metro host (Expo Go dev) →
+// localhost. No more hardcoded IPs.
 import Constants from "expo-constants";
 import { session } from "../session";
+
+// Public API origin for remote viewers (tunnel URL — changes per session).
+const TUNNEL_API_URL = "https://projector-rolling-instruments-unknown.trycloudflare.com";
 
 function resolveBaseUrl(): string {
   const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string };
   if (extra.apiUrl) return extra.apiUrl;
+  if (typeof window !== "undefined" && window.location && !/^(localhost|127\.0\.0\.1)/.test(window.location.hostname)) {
+    return TUNNEL_API_URL;
+  }
   const hostUri = Constants.expoConfig?.hostUri ?? "";
   const host = hostUri.split(":")[0];
   if (host) return `http://${host}:3001`;
