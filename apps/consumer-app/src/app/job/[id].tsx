@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { api, type RequestView } from "../../lib/api";
 import { Btn, s } from "../../ui";
 import { EmptyState, StatusChip } from "../../components";
@@ -93,6 +93,7 @@ export default function JobDetail() {
             <Btn label="🔧 No, needs rework" onPress={() => act("Rework opened", () => api.respondFollowUp(followUpId, false))} tone="danger" />
           </View>
         )}
+        <Btn label="↻ Book this again" onPress={() => router.push("/request")} tone="ghost" />
         {msg ? <Text style={s.sub}>{msg}</Text> : null}
       </ScrollView>
       <TabBar />

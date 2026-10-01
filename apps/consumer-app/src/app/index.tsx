@@ -56,12 +56,17 @@ export default function Home() {
   }
 
   return (
-    <View style={s.screen}>
-      <Text style={s.title}>Welcome to ServLink 🔐</Text>
-      <Text style={s.sub}>Log in with your email — we&apos;ll send a one-time code.</Text>
-      <Field label="Email" value={email} onChange={(t) => { setEmail(t); setErr(""); }} placeholder="you@example.com" />
-      {err ? <Text style={s.error}>{err}</Text> : null}
-      <Btn label={sending ? "Sending…" : "Send login code"} onPress={login} />
+    <View style={{ flex: 1, backgroundColor: colors.primaryContainer }}>
+      <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
+        <Text style={{ color: colors.goldSoft, fontSize: 11, letterSpacing: 3, fontWeight: "700", textAlign: "center" }}>
+          SERVLINK ABUJA
+        </Text>
+        <Text style={[s.title, { color: "#fff", textAlign: "center" }]}>Trusted home services, perfected.</Text>
+        <Text style={{ color: colors.goldSoft, textAlign: "center" }}>Log in with your email — we&apos;ll send a one-time code.</Text>
+        <Field label="" value={email} onChange={(t) => { setEmail(t); setErr(""); }} placeholder="you@example.com" />
+        {err ? <Text style={{ color: "#F5C6C0", textAlign: "center" }}>{err}</Text> : null}
+        <Btn label={sending ? "Sending…" : "Send login code"} onPress={login} tone="gold" />
+      </View>
     </View>
   );
 }

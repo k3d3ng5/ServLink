@@ -35,8 +35,11 @@ export default function Jobs() {
         renderItem={({ item }) => (
           <Link href={`/job/${item.id}`} asChild>
             <Pressable style={[s.card, { gap: 8 }]}>
-              <Text style={{ fontWeight: "700", color: "#14201C" }}>{item.description}</Text>
-              <StatusChip status={item.status} />
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <Text style={{ fontWeight: "700", color: "#14201C", flex: 1 }}>{item.description}</Text>
+                <StatusChip status={item.status} />
+              </View>
+              <View style={{ height: 1, backgroundColor: "#E7DFC9" }} />
               <Text style={s.sub}>
                 {item.zoneId} · ref {item.id.slice(0, 8)}
               </Text>
