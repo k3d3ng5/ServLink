@@ -4,6 +4,7 @@ import { Link, router, useFocusEffect } from "expo-router";
 import { api } from "../lib/api";
 import { session } from "../session";
 import { Btn, Field, s } from "../ui";
+import { colors } from "../theme";
 
 function Menu({ email }: { email: string }) {
   const [isPro, setIsPro] = useState(false);

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { api } from "../../lib/api";
-import { session } from "../../session";
-import { colors } from "../../theme";
-import { Btn, s } from "../../ui";
+import { api } from "../lib/api";
+import { session } from "../session";
+import { colors } from "../theme";
+import { Btn, s } from "../ui";
 
 // Stitch luxury login: deep emerald stage, ivory card, six digit boxes.
 export default function Verify() {
