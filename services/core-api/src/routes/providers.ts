@@ -73,6 +73,7 @@ providers.post("/provider-applications", async (req, res, next) => {
         zones: JSON.stringify(body.zones),
         telegramChatId: body.telegramChatId,
         email: body.email,
+        consentAt: new Date(),
         nin: body.nin,
         idType: body.idType,
         photoUrl: body.photoUrl,

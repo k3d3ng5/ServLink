@@ -50,6 +50,7 @@ model ProviderApplication {
   zones        String   // JSON array
   telegramChatId String?
   email        String?
+  consentAt    DateTime?  // explicit consent to NIN/ID processing (NDPA)
   nin          String?   // raw NIN held only until verification; never returned by API
   idType       String?   // nin_slip | voters_card | drivers_license | passport
   latitude     Float?

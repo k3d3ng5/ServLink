@@ -367,9 +367,17 @@ bot.on("message:text", async (ctx, next) => {
       if (/^\/skip$/i.test(text)) d.skillNote = "";
       else if (text.length < 3) return ctx.reply("A little more detail please (or /skip).");
       else d.skillNote = text;
+      s.step = "consent";
+      await ctx.reply(
+        "Privacy notice: to verify you, ServLink collects your NIN and one ID photo, used only for verification and kept under our data rules. Reply YES to consent and continue, or ❌ Cancel (we'll delete what you typed).",
+        { reply_markup: cancelKb }
+      );
+    } else if (s.step === "consent") {
+      if (!/^yes$/i.test(text)) return ctx.reply("Reply YES to consent and continue, or ❌ Cancel.");
+      d.consentAt = new Date().toISOString();
       s.step = "nin";
       await ctx.reply(
-        "Last step: your 11-digit NIN (National ID) for verification — valid NIN approves you instantly, otherwise our team reviews. Or /skip.",
+        "Consented ✓. Now your 11-digit NIN (National ID) — valid NIN approves you instantly, otherwise our team reviews. Or /skip.",
         { reply_markup: cancelKb }
       );
     } else if (s.step === "nin") {

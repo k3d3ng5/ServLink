@@ -368,9 +368,23 @@ Not downloads. Not registered users. Not AI conversations. Not provider registra
 
 ## 21. Data, Privacy & Safety
 
-ServLink will potentially process names, phone numbers, location, service history, payment information, and provider identity data. This requires data minimization, consent where required, access controls, retention rules, and Nigerian data-protection compliance — designed in from the start, not retrofitted.
+ServLink processes names, phone numbers, emails, GPS locations, service history, payment references, and provider identity data (NIN + government ID photos). This requires data minimization, explicit consent, access controls, retention rules, and Nigerian data-protection compliance (NDPA 2023, NDPC) — designed in from the start, not retrofitted.
 
-Safety is a first-class concern given ServLink deals with real-world services: high-risk categories (electrical, gas, structural, major mechanical work) need stronger verification, and ServLink must never imply it guarantees physical safety merely because a provider is verified.
+**Data governance rules (PRODUCT DECISIONS, enforced in code):**
+- **Minimization:** collect only what a flow needs (`what + where + when + contact` for requests; NIN + one ID photo for providers — nothing more).
+- **Consent:** every registration states plainly what is collected and why, and requires an explicit YES before NIN/ID capture. Consent timestamp is stored with the application.
+- **NIN handling:** raw NINs are write-only — storable, never returned by any API. Only the last 4 digits surface for review. Licensed-vendor verification upgrades Basic → Verified; format + photo checks alone never imply identity certainty.
+- **ID photos:** held in the Telegram vault during pilot (no local copies); R2 migration must preserve access-control, never public URLs.
+- **Retention:** request logs persist for marketplace integrity; PII (phone, email, ID refs) deletable on verified request; raw NINs purged after verification decision + 30 days.
+- **Access:** console has no auth gate yet (localhost pilot) — gating is a launch blocker, not a nice-to-have (see Phase 9).
+
+**AI governance (applies to the Groq assistant + future matching AI):**
+- Human-in-the-loop: the assistant proposes, the customer confirms (YES gate); matching suggests, humans can always override; the founder approves providers the automation can't.
+- No autonomous penalties: the system never bans, withholds pay, or adjudicates disputes alone.
+- Transparency: customers always see *who* is assigned and *why* (distance, tier, rating shown, not hidden scores).
+- Safety is a first-class concern given real-world services: high-risk categories (electrical, gas, structural, major mechanical work) require Verified tier minimum, and ServLink must never imply it guarantees physical safety merely because a provider is verified.
+
+**Pilot KYC position (PRODUCT DECISION):** true NIN validation needs a licensed vendor. For the 10–15 job pilot, verification = NIN format check + ID photo + human review (call references) — free, and proportionate to pilot risk. A vendor API (see ADR-012) enters before public launch, not after an incident.
 
 ---
 
