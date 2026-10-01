@@ -3,7 +3,7 @@ import { colors, radii } from "./theme";
 
 export const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper, padding: 20, gap: 12 },
-  title: { fontSize: 26, fontWeight: "800", color: colors.ink, fontFamily: "PlayfairDisplay_700Bold" },
+  title: { fontSize: 24, fontWeight: "800", color: colors.ink, fontFamily: "Inter_600SemiBold" },
   sub: { fontSize: 14, color: colors.muted },
   card: {
     backgroundColor: colors.card,
@@ -12,11 +12,6 @@ export const s = StyleSheet.create({
     borderRadius: radii.card,
     padding: 16,
     gap: 6,
-    shadowColor: "#0B3D2E",
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
   },
   input: {
     backgroundColor: colors.card,
@@ -28,13 +23,12 @@ export const s = StyleSheet.create({
     color: colors.ink,
   },
   error: { color: colors.danger, fontSize: 13 },
-  divider: { height: 1, backgroundColor: colors.accent, opacity: 0.4 },
+  divider: { height: 1, backgroundColor: colors.border },
 });
 
 export function Btn({ label, onPress, tone = "brand" }: { label: string; onPress: () => void; tone?: "brand" | "gold" | "ghost" | "danger" }) {
-  const bg =
-    tone === "brand" ? colors.brand : tone === "gold" ? colors.accent : tone === "danger" ? colors.danger : colors.card;
-  const fg = tone === "ghost" ? colors.brand : tone === "gold" ? colors.ink : "#fff";
+  const bg = tone === "brand" ? colors.brand : tone === "gold" ? colors.brand : tone === "danger" ? colors.danger : "#fff";
+  const fg = tone === "ghost" ? colors.brand : "#fff";
   return (
     <Pressable
       onPress={onPress}
@@ -44,7 +38,7 @@ export function Btn({ label, onPress, tone = "brand" }: { label: string; onPress
         padding: 15,
         alignItems: "center",
         borderWidth: tone === "ghost" ? 1 : 0,
-        borderColor: colors.accent,
+        borderColor: colors.brand,
         minHeight: 52,
         justifyContent: "center",
       }}
@@ -63,7 +57,7 @@ export function Field({ label, value, onChange, placeholder, multiline }: {
 }) {
   return (
     <View style={{ gap: 6 }}>
-      <Text style={{ fontWeight: "700", color: colors.ink }}>{label}</Text>
+      {label ? <Text style={{ fontWeight: "700", color: colors.ink }}>{label}</Text> : null}
       <TextInput
         style={[s.input, multiline && { minHeight: 80, textAlignVertical: "top" }]}
         value={value}

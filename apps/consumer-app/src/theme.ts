@@ -1,40 +1,38 @@
-// ServLink theme — extracted from Stitch luxury screens (Artisan Guild, Concierge
-// Desk, Live Dispatch Tracker, Privilege Profile).
+// ServLink corporate theme — premium technology brand.
+// Primary #0556ed, white/light surfaces, executive Inter typography.
+// Understated, intelligent, credible, contemporary. No gradients, no noise.
 export const colors = {
-  // Stitch primaries
-  primary: "#00261b",
-  primaryContainer: "#0b3d2e",
-  tertiaryContainer: "#1d3b30",
-  // Stitch golds
-  gold: "#755b00",
-  goldSoft: "#ffe08e",
-  goldBright: "#fed255",
-  accent: "#C9A227",
-  // Stitch surfaces
-  surface: "#fcf9f2",
-  surfaceLow: "#f6f3ec",
-  surfaceContainer: "#f0eee7",
-  surfaceHigh: "#ebe8e1",
-  paper: "#FAF7F0",
+  // Brand
+  brand: "#0556ed",
+  brandDark: "#0A1633",
+  primaryContainer: "#0556ed",
+  tertiaryContainer: "#0A1633",
+  // Accent (restrained blue scale)
+  accent: "#4D84F5",
+  accentSoft: "#E8EFFD",
+  goldSoft: "#E8EFFD",
+  gold: "#0556ed",
+  // Surfaces
+  surface: "#FFFFFF",
+  surfaceLow: "#F6F8FC",
+  surfaceContainer: "#EEF2F9",
+  surfaceHigh: "#E4EAF4",
+  paper: "#FFFFFF",
   card: "#FFFFFF",
   // Ink + support
-  ink: "#1c1c18",
+  ink: "#0A1633",
   onPrimary: "#ffffff",
-  muted: "#414944",
-  outline: "#717974",
-  success: "#1E7A4F",
-  danger: "#ba1a1a",
-  border: "#E7DFC9",
-  // Legacy aliases (kept compiling during migration)
-  brand: "#0b3d2e",
-  brandDark: "#00261b",
-  accentSoft: "#F5ECD4",
+  muted: "#5B6478",
+  outline: "#C6CEDD",
+  success: "#12805C",
+  danger: "#C03636",
+  border: "#E4EAF4",
 } as const;
 
 export const radii = {
   card: 12,
   pill: 999,
-  button: 12,
+  button: 10,
 } as const;
 
 export const CATEGORIES = [

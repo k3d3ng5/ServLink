@@ -103,7 +103,7 @@ export default function Chat() {
           contentContainerStyle={{ gap: 8, flexGrow: 1, paddingTop: 8 }}
           renderItem={({ item }) =>
             item.from === "me" ? (
-              <View style={{ alignSelf: "flex-end", backgroundColor: "#EEF2F1", borderRadius: 16, padding: 10, maxWidth: "85%" }}>
+              <View style={{ alignSelf: "flex-end", backgroundColor: "#E8EFFD", borderRadius: 16, padding: 10, maxWidth: "85%" }}>
                 <Text style={{ color: colors.ink }}>{item.text}</Text>
               </View>
             ) : (

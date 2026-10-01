@@ -1,4 +1,4 @@
 # @servlink/design-tokens
 
-Brand tokens live in `tokens.json` (StyleDictionary build lands in Phase 1).
-Rule: no hardcoded colors/type/space outside tokens.
+Brand tokens: ServLink corporate tech — primary #0556ed, white/light surfaces,
+Inter executive type. Rebuilt via `npm run build`.

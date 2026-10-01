@@ -47,11 +47,11 @@ export default function Pro() {
   if (!pro) return <View style={s.screen}><Text style={s.sub}>Loading…</Text></View>;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FAF7F0" }}>
+    <View style={{ flex: 1, backgroundColor: colors.paper }}>
       <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
       <View style={[s.card, { alignItems: "center", gap: 8, paddingVertical: 18 }]}>
-        <Text style={{ fontSize: 15, color: "#6B7280" }}>{pro.isOnline ? "You're visible to nearby jobs" : "You're hidden from new jobs"}</Text>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: pro.isOnline ? colors.brand : "#6B7280" }}>
+        <Text style={{ fontSize: 15, color: colors.muted }}>{pro.isOnline ? "You're visible to nearby jobs" : "You're hidden from new jobs"}</Text>
+        <Text style={{ fontSize: 22, fontWeight: "800", color: pro.isOnline ? colors.brand : colors.muted }}>
           {pro.isOnline ? "🟢 Online" : "🔴 Offline"}
         </Text>
         {pro.isOnline
