@@ -91,4 +91,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify({}),
     }),
+  markDone: (jobId: string, actor: "provider" | "customer" | "concierge") =>
+    req(`/jobs/${jobId}/mark-done`, { method: "POST", body: JSON.stringify({ actor }) }),
 };

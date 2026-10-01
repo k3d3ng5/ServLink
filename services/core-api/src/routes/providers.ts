@@ -73,14 +73,48 @@ providers.post("/provider-applications", async (req, res, next) => {
         zones: JSON.stringify(body.zones),
         telegramChatId: body.telegramChatId,
         email: body.email,
+        nin: body.nin,
         latitude: body.latitude,
         longitude: body.longitude,
         skillNote: body.skillNote,
         photoUrl: body.photoUrl,
       },
     });
+    // Automated NIN gate: valid 11-digit NIN + phone auto-approves to Basic.
+    // True identity verification (licensed vendor) upgrades to Verified later.
+    // NOTE: raw NIN is held only for verification and never returned by any API.
+    let autoApproved: { id: string } | null = null;
+    if (body.nin && /^\d{11}$/.test(body.nin)) {
+      try {
+        autoApproved = await db.provider.create({
+          data: {
+            name: body.name,
+            phone: body.phone,
+            email: body.email,
+            ninLast4: body.nin.slice(-4),
+            ninVerified: false,
+            telegramChatId: body.telegramChatId,
+            latitude: body.latitude,
+            longitude: body.longitude,
+            categories: JSON.stringify(body.categories),
+            zones: JSON.stringify(body.zones),
+            tier: "Basic",
+            verificationStatus: "nin_format_checked",
+          },
+        });
+        await db.providerApplication.update({
+          where: { id: app.id },
+          data: { status: "approved", reviewedBy: "system-nin-format" },
+        });
+      } catch {
+        // e.g. duplicate phone — falls back to human review, never crashes intake
+      }
+    }
     await notifyAdmins(`🧰 New provider application: ${body.name} (${body.phone})`);
-    res.status(201).json({ application: app });
+    res.status(201).json({
+      application: app,
+      autoApproved: autoApproved ? { providerId: autoApproved.id } : null,
+    });
   } catch (err) {
     next(err);
   }
@@ -113,6 +147,8 @@ providers.post("/provider-applications/:id/review", async (req, res, next) => {
           phone: app.phone,
           telegramChatId: app.telegramChatId,
           email: app.email,
+          ninLast4: app.nin ? app.nin.slice(-4) : undefined,
+          ninVerified: false,
           latitude: app.latitude,
           longitude: app.longitude,
           categories: app.categories,

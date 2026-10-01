@@ -30,6 +30,8 @@ export function MatchPanel({
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState("");
+  const [materials, setMaterials] = useState("");
+  const [materialsNote, setMaterialsNote] = useState("");
   const router = useRouter();
 
   async function run(label: string, fn: () => Promise<unknown>) {
@@ -89,21 +91,42 @@ export function MatchPanel({
               </button>
             ))}
           </div>
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Amount ₦"
+              placeholder="Labor ₦"
+              inputMode="numeric"
+              className="w-28 rounded border px-2 py-1 text-sm"
+            />
+            <input
+              value={materials}
+              onChange={(e) => setMaterials(e.target.value)}
+              placeholder="Materials ₦"
               inputMode="numeric"
               className="w-32 rounded border px-2 py-1 text-sm"
             />
+            <input
+              value={materialsNote}
+              onChange={(e) => setMaterialsNote(e.target.value)}
+              placeholder="Materials note (e.g. 2 bags cement)"
+              className="w-56 rounded border px-2 py-1 text-sm"
+            />
             <button
               disabled={busy || !amount}
-              onClick={() =>
-                run("Quoted", () =>
-                  post(`/jobs/${jobId}/quote`, { amountKobo: Math.round(Number(amount) * 100), actor: "console" })
-                )
-              }
+              onClick={() => {
+                const labor = Math.round(Number(amount) * 100);
+                const mat = materials ? Math.round(Number(materials) * 100) : 0;
+                return run("Quoted", () =>
+                  post(`/jobs/${jobId}/quote`, {
+                    amountKobo: labor + mat,
+                    laborKobo: labor,
+                    materialsKobo: mat,
+                    materialsNote: materialsNote || undefined,
+                    actor: "console",
+                  })
+                );
+              }}
               className="rounded border px-3 py-1 text-sm disabled:opacity-50"
             >
               Quote
@@ -114,6 +137,13 @@ export function MatchPanel({
               className="rounded bg-emerald-700 px-3 py-1 text-sm text-white disabled:opacity-50"
             >
               Send bill
+            </button>
+            <button
+              disabled={busy}
+              onClick={() => run("Marked done (both sides)", () => post(`/jobs/${jobId}/mark-done`, { actor: "concierge" }))}
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              Force done
             </button>
           </div>
         </>

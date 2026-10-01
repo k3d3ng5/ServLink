@@ -26,6 +26,8 @@ model Provider {
   name             String
   phone            String    @unique
   email            String?
+  ninLast4         String?   // NIN verification: format-checked at intake, vendor-verified later
+  ninVerified      Boolean   @default(false)
   telegramChatId   String?
   isOnline         Boolean @default(false)
   latitude         Float?
@@ -48,6 +50,7 @@ model ProviderApplication {
   zones        String   // JSON array
   telegramChatId String?
   email        String?
+  nin          String?   // raw NIN held only until verification; never returned by API
   latitude     Float?
   longitude    Float?
   skillNote    String?
@@ -95,9 +98,15 @@ model Job {
   matchedAt DateTime       @default(now())
   confirmedAt DateTime?
   startedAt DateTime?
+  // Bilateral completion: both sides must agree before "done properly?" is asked.
+  providerDoneAt DateTime?
+  customerDoneAt DateTime?
   doneAt    DateTime?
   // Paystack (post-job collection; pilot: customer pays after confirming work)
   amountKobo    Int?
+  laborKobo     Int?
+  materialsKobo Int?       @default(0)
+  materialsNote String?
   paystackRef   String?   @unique
   paymentStatus String    @default("unpaid") // unpaid | pending | paid | failed
   paidAt        DateTime?

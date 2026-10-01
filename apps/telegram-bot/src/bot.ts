@@ -367,8 +367,21 @@ bot.on("message:text", async (ctx, next) => {
       if (/^\/skip$/i.test(text)) d.skillNote = "";
       else if (text.length < 3) return ctx.reply("A little more detail please (or /skip).");
       else d.skillNote = text;
+      s.step = "nin";
+      await ctx.reply(
+        "Last step: your 11-digit NIN (National ID) for verification — valid NIN approves you instantly, otherwise our team reviews. Or /skip.",
+        { reply_markup: cancelKb }
+      );
+    } else if (s.step === "nin") {
+      if (/^\/skip$/i.test(text)) {
+        d.nin = "";
+      } else {
+        const digits = text.replace(/\D/g, "");
+        if (digits.length !== 11) return ctx.reply("NIN must be exactly 11 digits — check and retry, or /skip for manual review.");
+        d.nin = digits;
+      }
       try {
-        await api("/providers/provider-applications", {
+        const result = (await api("/providers/provider-applications", {
           method: "POST",
           body: JSON.stringify({
             name: d.name,
@@ -377,16 +390,20 @@ bot.on("message:text", async (ctx, next) => {
             zones: ["general"],
             telegramChatId: String(ctx.chat?.id),
             email: s.email,
+            nin: d.nin || undefined,
             latitude: d.latitude !== undefined ? Number(d.latitude) : undefined,
             longitude: d.longitude !== undefined ? Number(d.longitude) : undefined,
             skillNote: d.skillNote || undefined,
           }),
-        });
+        })) as { autoApproved?: { providerId: string } | null };
         const email = s.email;
         ctx.session = { email, isProvider: s.isProvider };
-        await ctx.reply("✅ Application received — under review. We'll message you here when approved.", {
-          reply_markup: menuKb(s.isProvider ?? false),
-        });
+        await ctx.reply(
+          result.autoApproved
+            ? "✅ Verified by NIN — you're approved and live! Tap 🟢 Go online when ready for jobs."
+            : "✅ Application received — under review. We'll message you here when approved.",
+          { reply_markup: menuKb(s.isProvider ?? false) }
+        );
       } catch (e) {
         await ctx.reply(`Couldn't save: ${(e as Error).message}. Try again.`);
       }
@@ -467,6 +484,31 @@ bot.on("callback_query:data", async (ctx, next) => {
       });
       await ctx.answerCallbackQuery("Request cancelled.");
       await ctx.editMessageText("❌ Request cancelled. Tap 🛠 anytime to book again.");
+    }
+  } catch (e) {
+    await ctx.answerCallbackQuery(`Error: ${(e as Error).message}`);
+  }
+});
+
+// ---------- Bilateral done-confirm buttons (customer confirms provider's done) ----------
+bot.on("callback_query:data", async (ctx, next) => {
+  const m = ctx.callbackQuery.data.match(/^dn:(.+):(ok|no)$/);
+  if (!m) return next();
+  try {
+    if (m[2] === "ok") {
+      await api(`/jobs/${m[1]}/mark-done`, {
+        method: "POST",
+        body: JSON.stringify({ actor: "customer" }),
+      });
+      await ctx.answerCallbackQuery("Confirmed complete — thank you!");
+      await ctx.editMessageText("✅ Completion confirmed by both sides. The follow-up comes next.");
+    } else {
+      await api(`/jobs/${m[1]}/rework`, {
+        method: "POST",
+        body: JSON.stringify({ reason: "customer says work not complete" }),
+      });
+      await ctx.answerCallbackQuery("Noted — rework opened.");
+      await ctx.editMessageText("🔧 You said it's not done — ServLink will follow up and reassign.");
     }
   } catch (e) {
     await ctx.answerCallbackQuery(`Error: ${(e as Error).message}`);
@@ -596,11 +638,41 @@ bot.command("stats", async (ctx) => {
   }
 });
 
+bot.command("pdone", async (ctx) => {
+  const chatId = String(ctx.chat?.id);
+  try {
+    const { provider } = await api<{
+      provider: { jobs: Array<{ id: string; request: { description: string; status: string } }> };
+    }>(`/providers/me?chatId=${encodeURIComponent(chatId)}`);
+    const active = provider.jobs.find((j) =>
+      ["CONFIRMED", "IN_PROGRESS", "MATCHED"].includes(j.request.status)
+    );
+    if (!active) return ctx.reply("No active job to mark done.");
+    await api(`/jobs/${active.id}/mark-done`, {
+      method: "POST",
+      body: JSON.stringify({ actor: "provider" }),
+    });
+    await ctx.reply(
+      `✅ Marked done: "${active.request.description.slice(0, 60)}". The customer has been asked to confirm — completion locks when you both agree.`
+    );
+  } catch {
+    await ctx.reply("No provider profile on this chat yet.", {
+      reply_markup: menuKb(false),
+    });
+  }
+});
+
 bot.command("quote", async (ctx) => {
   if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
-  const [req8, amount] = (ctx.match as string).trim().split(/\s+/);
-  const kobo = Math.round(Number(amount) * 100);
-  if (!req8 || !kobo || kobo < 100) return ctx.reply("Usage: /quote <requestRef> <amount-naira> (e.g. /quote a1b2c3d4 15000)");
+  // /quote <ref> <labor-naira> [materials-naira] [materials note...]
+  const parts = (ctx.match as string).trim().split(/\s+/);
+  const [req8, laborStr, matStr, ...noteParts] = parts;
+  const labor = Math.round(Number(laborStr) * 100);
+  const materials = matStr ? Math.round(Number(matStr) * 100) : 0;
+  if (!req8 || !labor || labor < 100) {
+    return ctx.reply("Usage: /quote <requestRef> <labor-naira> [materials-naira] [materials note]");
+  }
+  const total = labor + materials;
   try {
     const { requests } = await api<{ requests: Array<{ id: string; jobs: Array<{ id: string }> }> }>("/requests");
     const req = requests.find((r) => r.id.startsWith(req8));
@@ -608,9 +680,19 @@ bot.command("quote", async (ctx) => {
     if (!jobId) return ctx.reply("No job found for that ref.");
     await api(`/jobs/${jobId}/quote`, {
       method: "POST",
-      body: JSON.stringify({ amountKobo: kobo, actor: "concierge" }),
+      body: JSON.stringify({
+        amountKobo: total,
+        laborKobo: labor,
+        materialsKobo: materials,
+        materialsNote: noteParts.join(" ") || undefined,
+        actor: "concierge",
+      }),
     });
-    await ctx.reply(`Quoted ₦${Number(amount).toLocaleString()} on job \`${jobId.slice(0, 8)}\`.`, { parse_mode: "Markdown" });
+    const bits = [`labor ₦${Number(laborStr).toLocaleString()}`];
+    if (materials) bits.push(`materials ₦${Number(matStr).toLocaleString()}`);
+    await ctx.reply(`Quoted ${bits.join(" + ")} = ₦${(total / 100).toLocaleString()} on job \`${jobId.slice(0, 8)}\`.`, {
+      parse_mode: "Markdown",
+    });
   } catch (e) {
     await ctx.reply(`Failed: ${(e as Error).message}`);
   }
@@ -642,11 +724,11 @@ bot.command("done", async (ctx) => {  if (!isAdmin(ctx)) return ctx.reply("Not f
     const req = requests.find((r) => r.id.startsWith(req8));
     const jobId = req?.jobs.at(-1)?.id;
     if (!jobId) return ctx.reply("No job found for that ref.");
-    await api(`/requests/jobs/${jobId}/transition`, {
+    await api(`/jobs/${jobId}/mark-done`, {
       method: "POST",
-      body: JSON.stringify({ to: "DONE_PENDING_CONFIRM", actor: "concierge" }),
+      body: JSON.stringify({ actor: "concierge" }),
     });
-    await ctx.reply("Marked done — follow-up will go out shortly.");
+    await ctx.reply("Marked done (both sides, override) — follow-up will go out shortly.");
   } catch (e) {
     await ctx.reply(`Failed: ${(e as Error).message}`);
   }

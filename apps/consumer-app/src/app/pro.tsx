@@ -68,6 +68,22 @@ export default function Pro() {
           </Pressable>
         </Link>
       ))}
+      <Btn
+        label="✓ Mark latest job done"
+        tone="ghost"
+        onPress={async () => {
+          const active = pro.jobs.find((j) =>
+            ["CONFIRMED", "IN_PROGRESS", "MATCHED"].includes(j.request.status)
+          );
+          if (!active) return;
+          try {
+            await api.markDone(active.id, "provider");
+            load();
+          } catch {
+            /* surfaced on reload */
+          }
+        }}
+      />
       </ScrollView>
       <TabBar />
     </View>

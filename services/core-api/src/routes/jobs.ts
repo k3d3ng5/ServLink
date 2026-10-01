@@ -12,6 +12,7 @@ import { send } from "../notify.js";
 import {
   FollowUpResponseSchema,
   FollowUpSchema,
+  QuoteSchema,
   RateSchema,
   ReworkSchema,
 } from "../schemas.js";
@@ -19,27 +20,99 @@ import { applyTransition } from "../transitions.js";
 
 export const jobs = Router();
 
-// POST /jobs/:id/quote { amountKobo, actor } — agree the price (concierge/provider).
+// POST /jobs/:id/quote — agree the price: labor + materials breakdown.
 jobs.post("/:id/quote", async (req, res, next) => {
   try {
-    const body = z
-      .object({ amountKobo: z.number().int().min(100), actor: z.string().max(100).default("concierge") })
-      .parse(req.body);
+    const body = QuoteSchema.parse(req.body);
     const job = await db.job.update({
       where: { id: req.params.id },
-      data: { amountKobo: body.amountKobo },
+      data: {
+        amountKobo: body.amountKobo,
+        laborKobo: body.laborKobo,
+        materialsKobo: body.materialsKobo ?? 0,
+        materialsNote: body.materialsNote,
+      },
       include: { request: true },
     });
+    const parts = [`quoted ${naira(body.amountKobo)}`];
+    if (body.materialsKobo) {
+      parts.push(`materials ${naira(body.materialsKobo)}${body.materialsNote ? ` (${body.materialsNote})` : ""}`);
+    }
     await db.statusEvent.create({
       data: {
         requestId: job.requestId,
         fromStatus: job.request.status,
         toStatus: job.request.status,
         actor: body.actor,
-        note: `quoted ${naira(body.amountKobo)}`,
+        note: parts.join(" · "),
       },
     });
     res.json({ job });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /jobs/:id/mark-done { actor: provider|customer|concierge } — BILATERAL
+// completion: the provider marks first, the customer confirms. Only when BOTH
+// agree does the job move to DONE_PENDING_CONFIRM (then "done properly?").
+// Concierge override sets both at once.
+jobs.post("/:id/mark-done", async (req, res, next) => {
+  try {
+    const { actor } = z
+      .object({ actor: z.enum(["provider", "customer", "concierge"]) })
+      .parse(req.body);
+    const job = await db.job.findUnique({
+      where: { id: req.params.id },
+      include: { request: { include: { customer: true } }, provider: true },
+    });
+    if (!job) return res.status(404).json({ error: "not found" });
+
+    if (actor === "concierge") {
+      await db.job.update({
+        where: { id: job.id },
+        data: { providerDoneAt: new Date(), customerDoneAt: new Date() },
+      });
+      const result = await applyTransition(job.id, "DONE_PENDING_CONFIRM", "concierge");
+      return res.json({ bilateral: true, ...result });
+    }
+
+    if (job.request.status !== "IN_PROGRESS") {
+      return res.status(422).json({ error: `job is ${job.request.status}, mark-done needs IN_PROGRESS` });
+    }
+
+    if (actor === "provider") {
+      await db.job.update({ where: { id: job.id }, data: { providerDoneAt: new Date() } });
+      const to =
+        (job.request.sourceChannel === "telegram"
+          ? job.request.customer.handle
+          : job.request.customer.email ?? job.request.customer.handle) ?? "";
+      if (to && job.request.sourceChannel === "telegram" && process.env.TELEGRAM_BOT_TOKEN) {
+        await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            chat_id: to,
+            text: `✅ ${job.provider.name} says the work is done (ref \`${job.id.slice(0, 8)}\`). Do you confirm it's complete?`,
+            reply_markup: {
+              inline_keyboard: [[
+                { text: "✅ Yes, complete", callback_data: `dn:${job.id}:ok` },
+                { text: "❌ Not yet", callback_data: `dn:${job.id}:no` },
+              ]],
+            },
+          }),
+        });
+      }
+      return res.json({ providerDone: true, awaitingCustomer: true });
+    }
+
+    const fresh = await db.job.findUnique({ where: { id: job.id } });
+    if (!fresh?.providerDoneAt) {
+      return res.status(422).json({ error: "provider has not marked done yet" });
+    }
+    await db.job.update({ where: { id: job.id }, data: { customerDoneAt: new Date() } });
+    const result = await applyTransition(job.id, "DONE_PENDING_CONFIRM", "customer");
+    res.json({ bilateral: true, ...result });
   } catch (err) {
     next(err);
   }
