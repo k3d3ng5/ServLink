@@ -1,11 +1,11 @@
 import "dotenv/config";
 import cors from "cors";
-import express from "express";
-import { auth } from "./auth.js";
+import express from "express";import { auth } from "./auth.js";
 import { startDispatchWorker } from "./dispatch.js";
 import { startFollowUpWorker } from "./followup.js";
 import { assistantRoutes } from "./routes/assistant.js";
 import { authRoutes } from "./routes/auth.js";
+import { webhooks } from "./routes/webhooks.js";
 import { jobs } from "./routes/jobs.js";
 import { metrics } from "./routes/metrics.js";
 import { providers } from "./routes/providers.js";
@@ -13,7 +13,14 @@ import { requests } from "./routes/requests.js";
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+// Keep the raw body for Paystack webhook HMAC verification.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      (req as unknown as { rawBody?: string }).rawBody = buf.toString("utf8");
+    },
+  })
+);
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "core-api", phase: 3 });
@@ -25,6 +32,7 @@ app.use("/providers", providers);
 app.use("/metrics", metrics);
 app.use("/auth", authRoutes);
 app.use("/assistant", assistantRoutes);
+app.use("/webhooks", webhooks);
 
 // Better Auth handler (email-OTP endpoints: /api/auth/email-otp/...)
 // Note: req.originalUrl keeps the /api/auth prefix the handler routes on.

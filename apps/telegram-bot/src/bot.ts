@@ -596,6 +596,42 @@ bot.command("stats", async (ctx) => {
   }
 });
 
+bot.command("quote", async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
+  const [req8, amount] = (ctx.match as string).trim().split(/\s+/);
+  const kobo = Math.round(Number(amount) * 100);
+  if (!req8 || !kobo || kobo < 100) return ctx.reply("Usage: /quote <requestRef> <amount-naira> (e.g. /quote a1b2c3d4 15000)");
+  try {
+    const { requests } = await api<{ requests: Array<{ id: string; jobs: Array<{ id: string }> }> }>("/requests");
+    const req = requests.find((r) => r.id.startsWith(req8));
+    const jobId = req?.jobs.at(-1)?.id;
+    if (!jobId) return ctx.reply("No job found for that ref.");
+    await api(`/jobs/${jobId}/quote`, {
+      method: "POST",
+      body: JSON.stringify({ amountKobo: kobo, actor: "concierge" }),
+    });
+    await ctx.reply(`Quoted ₦${Number(amount).toLocaleString()} on job \`${jobId.slice(0, 8)}\`.`, { parse_mode: "Markdown" });
+  } catch (e) {
+    await ctx.reply(`Failed: ${(e as Error).message}`);
+  }
+});
+
+bot.command("bill", async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
+  const req8 = (ctx.match as string).trim();
+  if (!req8) return ctx.reply("Usage: /bill <requestRef> (needs a quote first)");
+  try {
+    const { requests } = await api<{ requests: Array<{ id: string; jobs: Array<{ id: string }> }> }>("/requests");
+    const req = requests.find((r) => r.id.startsWith(req8));
+    const jobId = req?.jobs.at(-1)?.id;
+    if (!jobId) return ctx.reply("No job found for that ref.");
+    await api(`/jobs/${jobId}/pay-init`, { method: "POST", body: JSON.stringify({}) });
+    await ctx.reply("Pay link sent to the customer. They pay via Paystack; receipt is automatic.");
+  } catch (e) {
+    await ctx.reply(`Failed: ${(e as Error).message}`);
+  }
+});
+
 bot.command("done", async (ctx) => {  if (!isAdmin(ctx)) return ctx.reply("Not for you 🙂");
   const req8 = (ctx.match as string).trim();
   if (!req8) return ctx.reply("Usage: /done <requestRef>");

@@ -22,6 +22,9 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
         {job && (
           <p className="mt-2 text-sm">
             Active job: <code>{job.id.slice(0, 8)}</code> → {job.provider.name}
+            {job.amountKobo
+              ? ` · ₦${(job.amountKobo / 100).toLocaleString("en-NG")} (${job.paymentStatus})`
+              : ""}
           </p>
         )}
       </div>

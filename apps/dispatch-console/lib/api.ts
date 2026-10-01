@@ -22,7 +22,12 @@ export interface QueueItem {
   sourceChannel: string;
   createdAt: string;
   customer: { name: string | null; handle: string };
-  jobs: Array<{ id: string; provider: { name: string } }>;
+  jobs: Array<{
+    id: string;
+    provider: { name: string };
+    amountKobo: number | null;
+    paymentStatus: string;
+  }>;
 }
 
 export interface Suggestion {

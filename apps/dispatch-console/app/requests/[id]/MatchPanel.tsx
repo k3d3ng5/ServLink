@@ -29,6 +29,7 @@ export function MatchPanel({
 }) {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [amount, setAmount] = useState("");
   const router = useRouter();
 
   async function run(label: string, fn: () => Promise<unknown>) {
@@ -75,18 +76,47 @@ export function MatchPanel({
       )}
 
       {jobId && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {["CONFIRMED", "IN_PROGRESS", "DONE_PENDING_CONFIRM", "CANCELLED"].map((to) => (
+        <>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {["CONFIRMED", "IN_PROGRESS", "DONE_PENDING_CONFIRM", "CANCELLED"].map((to) => (
+              <button
+                key={to}
+                disabled={busy}
+                onClick={() => run(to, () => post(`/requests/jobs/${jobId}/transition`, { to, actor: "console" }))}
+                className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+              >
+                → {to}
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Amount ₦"
+              inputMode="numeric"
+              className="w-32 rounded border px-2 py-1 text-sm"
+            />
             <button
-              key={to}
-              disabled={busy}
-              onClick={() => run(to, () => post(`/requests/jobs/${jobId}/transition`, { to, actor: "console" }))}
+              disabled={busy || !amount}
+              onClick={() =>
+                run("Quoted", () =>
+                  post(`/jobs/${jobId}/quote`, { amountKobo: Math.round(Number(amount) * 100), actor: "console" })
+                )
+              }
               className="rounded border px-3 py-1 text-sm disabled:opacity-50"
             >
-              → {to}
+              Quote
             </button>
-          ))}
-        </div>
+            <button
+              disabled={busy}
+              onClick={() => run("Bill sent", () => post(`/jobs/${jobId}/pay-init`, {}))}
+              className="rounded bg-emerald-700 px-3 py-1 text-sm text-white disabled:opacity-50"
+            >
+              Send bill
+            </button>
+          </div>
+        </>
       )}
       {msg && <p className="mt-3 text-sm">{msg}</p>}
     </div>

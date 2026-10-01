@@ -96,6 +96,11 @@ model Job {
   confirmedAt DateTime?
   startedAt DateTime?
   doneAt    DateTime?
+  // Paystack (post-job collection; pilot: customer pays after confirming work)
+  amountKobo    Int?
+  paystackRef   String?   @unique
+  paymentStatus String    @default("unpaid") // unpaid | pending | paid | failed
+  paidAt        DateTime?
   followUps FollowUp[]
   ratings   Rating[]
   reworks   ReworkTicket[]

@@ -34,6 +34,8 @@ export interface JobView {
   id: string;
   provider: { name: string };
   followUps: Array<{ id: string }>;
+  amountKobo: number | null;
+  paymentStatus: string;
 }
 export interface RequestView {
   id: string;
@@ -84,4 +86,9 @@ export const api = {
     }),
   rate: (jobId: string, score: number) =>
     req(`/jobs/${jobId}/rate`, { method: "POST", body: JSON.stringify({ score }) }),
+  payInit: (jobId: string) =>
+    req<{ authorization_url: string; reference: string }>(`/jobs/${jobId}/pay-init`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
 };

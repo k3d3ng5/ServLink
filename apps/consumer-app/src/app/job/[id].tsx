@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { api, type RequestView } from "../../lib/api";
 import { Btn, s } from "../../ui";
@@ -93,6 +93,28 @@ export default function JobDetail() {
             <Btn label="🔧 No, needs rework" onPress={() => act("Rework opened", () => api.respondFollowUp(followUpId, false))} tone="danger" />
           </View>
         )}
+        {job?.amountKobo ? (
+          <View style={[s.card, { gap: 8 }]}>
+            <Text style={{ fontWeight: "800", fontSize: 18 }}>
+              ₦{(job.amountKobo / 100).toLocaleString("en-NG")}
+            </Text>
+            <Text style={s.sub}>
+              {job.paymentStatus === "paid" ? "✅ Paid — receipt sent" : "Payment pending"}
+            </Text>
+            {job.paymentStatus !== "paid" && (
+              <Btn
+                label="💳 Pay with Paystack"
+                tone="gold"
+                onPress={() =>
+                  act("Pay link", async () => {
+                    const r = await api.payInit(job.id);
+                    await Linking.openURL(r.authorization_url);
+                  })
+                }
+              />
+            )}
+          </View>
+        ) : null}
         <Btn label="↻ Book this again" onPress={() => router.push("/request")} tone="ghost" />
         {msg ? <Text style={s.sub}>{msg}</Text> : null}
       </ScrollView>
