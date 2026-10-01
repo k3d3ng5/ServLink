@@ -16,7 +16,8 @@
       "bundleIdentifier": "com.servlink.app"
     },
     "android": {
-      "package": "com.servlink.app"
+      "package": "com.servlink.app",
+      "usesCleartextTraffic": true
     },
     "plugins": [
       "expo-router",
