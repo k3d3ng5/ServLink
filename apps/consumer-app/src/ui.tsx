@@ -1,5 +1,15 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ImageBackground, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors, radii } from "./theme";
+
+const BG = require("../assets/bg-soft.png");
+
+export function Backdrop({ children }: { children: React.ReactNode }) {
+  return (
+    <ImageBackground source={BG} style={{ flex: 1 }} resizeMode="cover">
+      {children}
+    </ImageBackground>
+  );
+}
 
 export const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper, padding: 20, gap: 12 },

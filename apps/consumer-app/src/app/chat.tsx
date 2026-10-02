@@ -5,7 +5,7 @@ import * as Location from "expo-location";
 import { api } from "../lib/api";
 import { session } from "../session";
 import { colors } from "../theme";
-import { s } from "../ui";
+import { Backdrop, s } from "../ui";
 import { TabBar } from "../tabs";
 
 interface Msg {
@@ -75,8 +75,9 @@ export default function Chat() {
   const fresh = msgs.length === 0;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <View style={[s.screen, { flex: 1, paddingBottom: 12 }]}>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={[s.screen, { flex: 1, paddingBottom: 12, backgroundColor: "transparent" }]}>
       {fresh ? (
         <View style={{ flex: 1, justifyContent: "center", gap: 16 }}>
           <View style={{ alignItems: "center", gap: 6 }}>
@@ -165,5 +166,6 @@ export default function Chat() {
       </View>
       <TabBar />
     </View>
+    </Backdrop>
   );
 }

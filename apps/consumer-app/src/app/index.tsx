@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { Link, router, useFocusEffect } from "expo-router";
 import { api } from "../lib/api";
 import { session } from "../session";
-import { Btn, Field, s } from "../ui";
+import { Btn, Field, s, Backdrop } from "../ui";
 import { colors } from "../theme";
 
 function Menu({ email }: { email: string }) {
@@ -57,17 +57,19 @@ export default function Home() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.primaryContainer }}>
-      <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
-        <Text style={{ color: colors.goldSoft, fontSize: 11, letterSpacing: 3, fontWeight: "700", textAlign: "center" }}>
-          SERVLINK ABUJA
-        </Text>
-        <Text style={[s.title, { color: "#fff", textAlign: "center" }]}>Trusted home services, perfected.</Text>
-        <Text style={{ color: colors.goldSoft, textAlign: "center" }}>Log in with your email — we&apos;ll send a one-time code.</Text>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12, backgroundColor: "transparent" }}>
+        <View style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: colors.brand, alignItems: "center", justifyContent: "center", alignSelf: "center" }}>
+          <Text style={{ color: "#fff", fontSize: 30, fontWeight: "800" }}>S</Text>
+        </View>
+        <Text style={[s.title, { textAlign: "center" }]}>Trusted home services, perfected.</Text>
+        <Text style={{ color: colors.muted, textAlign: "center" }}>Log in with your email — we&apos;ll send a one-time code.</Text>
         <Field label="" value={email} onChange={(t) => { setEmail(t); setErr(""); }} placeholder="you@example.com" />
-        {err ? <Text style={{ color: "#F5C6C0", textAlign: "center" }}>{err}</Text> : null}
-        <Btn label={sending ? "Sending…" : "Send login code"} onPress={login} tone="gold" />
+        {err ? <Text style={s.error}>{err}</Text> : null}
+        <Btn label={sending ? "Sending…" : "Send login code"} onPress={login} />
       </View>
     </View>
+    </Backdrop>
   );
 }
