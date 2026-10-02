@@ -9,7 +9,7 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "SERVLINK_API_URL": "https://projector-rolling-instruments-unknown.trycloudflare.com" }
+      "env": { "SERVLINK_API_URL": "https://examples-hazards-hiring-ecology.trycloudflare.com" }
     },
     "production": {
       "autoIncrement": true
