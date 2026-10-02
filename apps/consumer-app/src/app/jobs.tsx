@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { Link, useFocusEffect } from "expo-router";
 import { api, type RequestView } from "../lib/api";
 import { session } from "../session";
@@ -36,7 +36,7 @@ export default function Jobs() {
         ListEmptyComponent={<EmptyState title="No jobs yet" sub="Create a request and it will appear here with live status." />}
         renderItem={({ item }) => (
           <Link href={`/job/${item.id}`} asChild>
-            <Pressable style={[s.card, { gap: 8 }]}>
+            <Pressable style={StyleSheet.flatten([s.card, { gap: 8 }])}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <Text style={{ fontWeight: "700", color: "#14201C", flex: 1 }}>{item.description}</Text>
                 <StatusChip status={item.status} />

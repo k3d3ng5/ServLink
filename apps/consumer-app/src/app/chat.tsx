@@ -141,7 +141,7 @@ export default function Chat() {
           ))}
         </View>
       )}
-      <View style={{ flexDirection: "row", gap: 8, alignItems: "center", borderWidth: 1, borderColor: colors.border, borderRadius: 24, paddingLeft: 16, paddingRight: 6, paddingVertical: 6 }}>
+      <View style={{ flexDirection: "row", gap: 8, alignItems: "center", backgroundColor: "#fff", borderWidth: 1.5, borderColor: colors.brand, borderRadius: 24, paddingLeft: 16, paddingRight: 6, paddingVertical: 6, shadowColor: "#0A1633", shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 3 }}>
         <TextInput
           style={{ flex: 1, fontSize: 16, color: colors.ink }}
           value={input}

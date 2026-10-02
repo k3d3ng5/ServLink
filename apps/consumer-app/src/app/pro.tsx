@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Link, useFocusEffect } from "expo-router";
 import { api } from "../lib/api";
 import { session } from "../session";
@@ -63,7 +63,7 @@ export default function Pro() {
       {pro.jobs.length === 0 && <EmptyState title="No jobs yet" sub="Stay online — nearby requests will appear here." />}
       {pro.jobs.map((j) => (
         <Link key={j.id} href={`/job/${j.id}`} asChild>
-          <Pressable style={[s.card, { gap: 6 }]}>
+          <Pressable style={StyleSheet.flatten([s.card, { gap: 6 }])}>
             <Text style={{ fontWeight: "700" }}>{j.request.description.slice(0, 60)}</Text>
             <StatusChip status={j.request.status} />
           </Pressable>
