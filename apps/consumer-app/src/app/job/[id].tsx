@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { Linking, ScrollView, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { api, type RequestView } from "../../lib/api";
-import { Btn, s } from "../../ui";
+import { Backdrop, Btn, s } from "../../ui";
 import { EmptyState, StatusChip } from "../../components";
 import { TabBar } from "../../tabs";
 import { colors } from "../../theme";
@@ -40,8 +40,9 @@ export default function JobDetail() {
   const reachedIdx = STEP_ORDER.indexOf(req.status === "FOLLOW_UP_SENT" ? "DONE_PENDING_CONFIRM" : req.status);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1, backgroundColor: "transparent" }]}>
         <Text style={s.title}>{req.description}</Text>
         <Text style={s.sub}>{req.zoneId} · {req.address} · ref {req.id.slice(0, 8)}</Text>
 
@@ -120,5 +121,6 @@ export default function JobDetail() {
       </ScrollView>
       <TabBar />
     </View>
+    </Backdrop>
   );
 }

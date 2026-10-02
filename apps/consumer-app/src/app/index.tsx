@@ -17,7 +17,9 @@ function Menu({ email }: { email: string }) {
     }, [])
   );
   return (
-    <View style={s.screen}>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={[s.screen, { flex: 1, backgroundColor: "transparent" }]}>
       <Text style={s.title}>Tell ServLink.{"\n"}We&apos;ll help get it done.</Text>
       <Text style={s.sub}>Logged in as {email}</Text>
       <Link href="/chat" asChild><Btn label="💬 Chat with ServLink" onPress={() => {}} /></Link>
@@ -26,7 +28,9 @@ function Menu({ email }: { email: string }) {
       {isPro && (
         <Link href="/pro" asChild><Btn label="🧰 ServLink Pro" onPress={() => {}} tone="ghost" /></Link>
       )}
+      </View>
     </View>
+    </Backdrop>
   );
 }
 

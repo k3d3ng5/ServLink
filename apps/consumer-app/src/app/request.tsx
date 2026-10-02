@@ -5,7 +5,7 @@ import * as Location from "expo-location";
 import { api } from "../lib/api";
 import { session } from "../session";
 import { CATEGORIES, colors } from "../theme";
-import { Btn, Field, s } from "../ui";
+import { Backdrop, Btn, Field, s } from "../ui";
 import { TabBar } from "../tabs";
 
 function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
@@ -71,8 +71,9 @@ export default function RequestScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1, backgroundColor: "transparent" }]}>
       {step === 0 && (
         <>
           <Text style={s.title}>What needs doing?</Text>
@@ -104,5 +105,6 @@ export default function RequestScreen() {
       </ScrollView>
       <TabBar />
     </View>
+    </Backdrop>
   );
 }

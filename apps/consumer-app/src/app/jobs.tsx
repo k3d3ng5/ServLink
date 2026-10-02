@@ -6,7 +6,7 @@ import { session } from "../session";
 import { EmptyState, StatusChip } from "../components";
 import { TabBar } from "../tabs";
 import { colors } from "../theme";
-import { s } from "../ui";
+import { Backdrop, s } from "../ui";
 
 export default function Jobs() {
   const [items, setItems] = useState<RequestView[]>([]);
@@ -24,8 +24,9 @@ export default function Jobs() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <View style={[s.screen, { flex: 1 }]}>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={[s.screen, { flex: 1, backgroundColor: "transparent" }]}>
       <Text style={s.title}>My jobs</Text>
       {err ? <Text style={s.error}>{err}</Text> : null}
       <FlatList
@@ -51,5 +52,6 @@ export default function Jobs() {
       </View>
       <TabBar />
     </View>
+    </Backdrop>
   );
 }

@@ -6,7 +6,7 @@ import { session } from "../session";
 import { EmptyState, StatusChip } from "../components";
 import { TabBar } from "../tabs";
 import { colors } from "../theme";
-import { Btn, s } from "../ui";
+import { Backdrop, Btn, s } from "../ui";
 
 export interface ProScreen {
   id: string;
@@ -47,8 +47,9 @@ export default function Pro() {
   if (!pro) return <View style={s.screen}><Text style={s.sub}>Loading…</Text></View>;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1, backgroundColor: "transparent" }]}>
       <View style={[s.card, { alignItems: "center", gap: 8, paddingVertical: 18 }]}>
         <Text style={{ fontSize: 15, color: colors.muted }}>{pro.isOnline ? "You're visible to nearby jobs" : "You're hidden from new jobs"}</Text>
         <Text style={{ fontSize: 22, fontWeight: "800", color: pro.isOnline ? colors.brand : colors.muted }}>
@@ -87,5 +88,6 @@ export default function Pro() {
       </ScrollView>
       <TabBar />
     </View>
+    </Backdrop>
   );
 }

@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from "react-native";
 import { Link, useFocusEffect } from "expo-router";
 import { api, type RequestView } from "../lib/api";
 import { session } from "../session";
-import { Btn, s } from "../ui";
+import { Backdrop, Btn, s } from "../ui";
 import { TabBar } from "../tabs";
 import { colors } from "../theme";
 
@@ -18,8 +18,9 @@ export default function Profile() {
   const completed = items.filter((r) => r.status === "COMPLETED").length;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
-      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1 }]}>
+    <Backdrop>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1, backgroundColor: "transparent" }]}>
         <View style={{ backgroundColor: colors.tertiaryContainer, borderRadius: 16, padding: 20, gap: 8 }}>
           <Text style={{ color: colors.goldSoft, fontSize: 11, letterSpacing: 2, fontWeight: "700" }}>
             SERVLINK PRIVILEGE
@@ -53,5 +54,6 @@ export default function Profile() {
       </ScrollView>
       <TabBar />
     </View>
+    </Backdrop>
   );
 }
