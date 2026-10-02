@@ -116,7 +116,7 @@ export default function JobDetail() {
             )}
           </View>
         ) : null}
-        <Btn label="↻ Book this again" onPress={() => router.push("/request")} tone="ghost" />
+        <Btn label="↻ Book this again" onPress={() => router.push("/chat")} tone="ghost" />
         {msg ? <Text style={s.sub}>{msg}</Text> : null}
       </ScrollView>
       <TabBar />

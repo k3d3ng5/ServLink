@@ -17,12 +17,12 @@ interface Msg {
 let n = 0;
 const nid = () => `m${Date.now()}_${n++}`;
 
-const STARTERS = [
-  "My tap is leaking",
-  "AC blowing hot air",
-  "No power in one room",
-  "Deep clean my flat",
-];
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function Chat() {
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
@@ -84,18 +84,9 @@ export default function Chat() {
             <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.brand, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: "#fff", fontSize: 26, fontWeight: "800" }}>S</Text>
             </View>
-            <Text style={[s.title, { textAlign: "center" }]}>What needs fixing today?</Text>
-            <Text style={[s.sub, { textAlign: "center" }]}>Tell me in plain words — I&apos;ll find the closest trusted provider.</Text>
+            <Text style={[s.title, { textAlign: "center" }]}>{greeting()}.</Text>
+            <Text style={[s.sub, { textAlign: "center" }]}>I&apos;m your ServLink concierge — describe what needs fixing and I&apos;ll match you instantly.</Text>
           </View>
-          {STARTERS.map((q) => (
-            <Pressable
-              key={q}
-              onPress={() => send(q)}
-              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14 }}
-            >
-              <Text style={{ color: colors.ink, fontSize: 15 }}>{q}</Text>
-            </Pressable>
-          ))}
         </View>
       ) : (
         <FlatList

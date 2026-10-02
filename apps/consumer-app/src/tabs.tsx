@@ -4,9 +4,9 @@ import { colors } from "./theme";
 
 const TABS = [
   ["Concierge", "/chat", "✦"],
-  ["Services", "/request", "🛠"],
   ["Activity", "/jobs", "🕘"],
   ["Privilege", "/profile", "♛"],
+  ["Settings", "/settings", "⚙"],
 ] as const;
 
 // Stitch-style bottom tab bar: ivory, gold active pill, 44pt+ targets.
