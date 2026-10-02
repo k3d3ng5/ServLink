@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
 import { api } from "../lib/api";
 import { session } from "../session";
@@ -25,6 +25,7 @@ function greeting(): string {
 }
 
 export default function Chat() {
+  const { hello } = useLocalSearchParams<{ hello?: string }>();
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [quick, setQuick] = useState<string[]>([]);
@@ -32,6 +33,16 @@ export default function Chat() {
   const [busy, setBusy] = useState(false);
   const [doneJobId, setDoneJobId] = useState<string | null>(null);
   const sentGps = useRef(false);
+  const helloSent = useRef(false);
+
+  // Deep link from Services directory: open chat already asking for that artisan.
+  useEffect(() => {
+    if (hello && !helloSent.current) {
+      helloSent.current = true;
+      send(hello);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hello]);
 
   async function send(text: string) {
     const clean = text.trim();

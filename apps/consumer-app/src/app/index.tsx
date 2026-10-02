@@ -23,6 +23,7 @@ function Menu({ email }: { email: string }) {
       <Text style={s.title}>Tell ServLink.{"\n"}We&apos;ll help get it done.</Text>
       <Text style={s.sub}>Logged in as {email}</Text>
       <Link href="/chat" asChild><Btn label="💬 Concierge chat" onPress={() => {}} /></Link>
+      <Link href="/services" asChild><Btn label="🧰 Browse artisans" onPress={() => {}} tone="ghost" /></Link>
       <Link href="/jobs" asChild><Btn label="📦 My jobs" onPress={() => {}} tone="ghost" /></Link>
       {isPro && (
         <Link href="/pro" asChild><Btn label="🧰 ServLink Pro" onPress={() => {}} tone="ghost" /></Link>

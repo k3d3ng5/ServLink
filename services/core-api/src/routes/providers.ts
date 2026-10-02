@@ -6,6 +6,42 @@ import { ApplicationSchema, ReviewSchema } from "../schemas.js";
 
 export const providers = Router();
 
+// GET /providers/directory — PUBLIC-safe listing for the Services directory.
+// No PII: no phone, email, coordinates, or chat handles. Only what a customer
+// needs to choose: name, skills, tier, track record.
+providers.get("/directory", async (req, res, next) => {
+  try {
+    const { categoryId } = req.query as Record<string, string | undefined>;
+    const all = await db.provider.findMany({
+      include: { jobs: { include: { ratings: true } }, },
+    });
+    const list = all
+      .filter((p) => {
+        if (!categoryId) return true;
+        const cats: string[] = JSON.parse(p.categories || "[]");
+        return cats.includes(categoryId);
+      })
+      .map((p) => {
+        const ratings = p.jobs.flatMap((j) => j.ratings);
+        return {
+          id: p.id,
+          name: p.name,
+          categories: JSON.parse(p.categories || "[]"),
+          tier: p.tier,
+          isOnline: p.isOnline,
+          jobsCompleted: p.jobs.length,
+          avgRating: ratings.length
+            ? Math.round((ratings.reduce((a, r) => a + r.score, 0) / ratings.length) * 10) / 10
+            : null,
+        };
+      })
+      .sort((a, b) => Number(b.isOnline) - Number(a.isOnline) || b.jobsCompleted - a.jobsCompleted);
+    res.json({ providers: list });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /providers?categoryId=&zoneId= — rule-based candidate list (Phase 7 ranks).
 // Online-only when ?onlineOnly=true (provider availability gate).
 providers.get("/", async (req, res, next) => {
