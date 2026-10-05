@@ -56,10 +56,15 @@ export default function JobDetail() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontWeight: "800", fontSize: 16, color: colors.ink }}>{job.provider.name}</Text>
-                <Text style={s.sub}>Assigned provider</Text>
+                <Text style={s.sub}>Assigned provider{job.provider.tier ? ` · ${job.provider.tier}` : ""}</Text>
               </View>
               <StatusChip status={req.status} />
             </View>
+            {job.provider.phone ? (
+              <Btn label="📞 Call provider" tone="ghost" onPress={() => Linking.openURL(`tel:${job.provider.phone}`)} />
+            ) : (
+              <Text style={s.sub}>Contact unlocks after both sides confirm.</Text>
+            )}
           </View>
         )}
 

@@ -83,6 +83,20 @@ providers.get("/me", async (req, res, next) => {
   }
 });
 
+// GET /providers/:id/offers — pending job offers for the provider app.
+providers.get("/:id/offers", async (req, res, next) => {
+  try {
+    const offers = await db.jobOffer.findMany({
+      where: { providerId: req.params.id, status: "pending" },
+      include: { job: { include: { request: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json({ offers });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /providers/:id/online { online } — availability toggle.
 providers.post("/:id/online", async (req, res, next) => {
   try {

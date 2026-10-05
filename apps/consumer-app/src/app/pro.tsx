@@ -1,35 +1,69 @@
-import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useFocusEffect } from "expo-router";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { api } from "../lib/api";
 import { session } from "../session";
 import { EmptyState, StatusChip } from "../components";
 import { TabBar } from "../tabs";
-import { colors } from "../theme";
 import { Backdrop, Btn, s } from "../ui";
+import { colors } from "../theme";
 
-export interface ProScreen {
+interface Offer {
   id: string;
-  isOnline: boolean;
-  jobs: Array<{ id: string; request: { description: string; status: string } }>;
+  expiresAt: string;
+  job: { id: string; request: { description: string; zoneId: string; address: string } };
 }
 
+function countdown(expiresAt: string, now: number): string {
+  const s = Math.max(0, Math.round((new Date(expiresAt).getTime() - now) / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+// ServLink Pro (Stitch dispatch): online toggle, live offer card with countdown,
+// accept/decline wired to the same offer engine as the bot.
 export default function Pro() {
-  const [pro, setPro] = useState<ProScreen | null>(null);
+  const [proId, setProId] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(false);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [err, setErr] = useState("");
+  const [now, setNow] = useState(Date.now());
 
   const load = useCallback(() => {
     api
       .proMe()
-      .then((r) => setPro(r.provider))
+      .then(async (r) => {
+        setProId(r.provider.id);
+        setIsOnline(r.provider.isOnline);
+        try {
+          const o = await api.offers(r.provider.id);
+          setOffers(o.offers);
+        } catch {
+          setOffers([]);
+        }
+      })
       .catch((e) => setErr((e as Error).message));
   }, []);
   useFocusEffect(load);
 
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
   async function setOnline(online: boolean) {
-    if (!pro) return;
+    if (!proId) return;
     try {
-      await api.setOnline(pro.id, online);
+      await api.setOnline(proId, online);
+      load();
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  }
+
+  async function answer(jobId: string, ok: boolean) {
+    try {
+      if (ok) await api.acceptJob(jobId);
+      else await api.declineJob(jobId);
       load();
     } catch (e) {
       setErr((e as Error).message);
@@ -41,50 +75,48 @@ export default function Pro() {
       <View style={s.screen}>
         <Text style={s.title}>ServLink Pro</Text>
         <Text style={s.sub}>{err}</Text>
-        <Text style={s.sub}>No provider profile on this login yet — register via the Telegram bot 🧰 first.</Text>
+        <Text style={s.sub}>No provider profile on this login yet — register via the Telegram bot first.</Text>
       </View>
     );
-  if (!pro) return <View style={s.screen}><Text style={s.sub}>Loading…</Text></View>;
 
   return (
     <Backdrop>
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <ScrollView contentContainerStyle={[s.screen, { flexGrow: 1, backgroundColor: "transparent" }]}>
-      <View style={[s.card, { alignItems: "center", gap: 8, paddingVertical: 18 }]}>
-        <Text style={{ fontSize: 15, color: colors.muted }}>{pro.isOnline ? "You're visible to nearby jobs" : "You're hidden from new jobs"}</Text>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: pro.isOnline ? colors.brand : colors.muted }}>
-          {pro.isOnline ? "🟢 Online" : "🔴 Offline"}
-        </Text>
-        {pro.isOnline
-          ? <Btn label="Go offline" onPress={() => setOnline(false)} tone="danger" />
-          : <Btn label="Go online" onPress={() => setOnline(true)} />}
-      </View>
-      <Text style={{ fontWeight: "700", marginTop: 8 }}>My jobs ({pro.jobs.length})</Text>
-      {pro.jobs.length === 0 && <EmptyState title="No jobs yet" sub="Stay online — nearby requests will appear here." />}
-      {pro.jobs.map((j) => (
-        <Link key={j.id} href={`/job/${j.id}`} asChild>
-          <Pressable style={StyleSheet.flatten([s.card, { gap: 6 }])}>
-            <Text style={{ fontWeight: "700" }}>{j.request.description.slice(0, 60)}</Text>
-            <StatusChip status={j.request.status} />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View>
+            <Text style={s.sub}>{isOnline ? "● Online · Accepting" : "○ Offline"}</Text>
+            <Text style={s.title}>Dispatch</Text>
+          </View>
+          <Pressable
+            onPress={() => setOnline(!isOnline)}
+            style={{ backgroundColor: isOnline ? colors.success : colors.muted, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14 }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "800" }}>{isOnline ? "ON" : "OFF"}</Text>
           </Pressable>
-        </Link>
-      ))}
-      <Btn
-        label="✓ Mark latest job done"
-        tone="ghost"
-        onPress={async () => {
-          const active = pro.jobs.find((j) =>
-            ["CONFIRMED", "IN_PROGRESS", "MATCHED"].includes(j.request.status)
-          );
-          if (!active) return;
-          try {
-            await api.markDone(active.id, "provider");
-            load();
-          } catch {
-            /* surfaced on reload */
-          }
-        }}
-      />
+        </View>
+
+        {offers.map((o) => (
+          <View key={o.id} style={[s.card, { borderWidth: 2, borderColor: colors.brand }]}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={{ fontWeight: "800", color: colors.brand, fontSize: 13, letterSpacing: 1 }}>⚡ NEW DISPATCH OFFER</Text>
+              <Text style={{ fontWeight: "800", color: colors.danger }}>⏱ {countdown(o.expiresAt, now)}</Text>
+            </View>
+            <Text style={{ fontWeight: "800", fontSize: 17, color: colors.ink }}>{o.job.request.description}</Text>
+            <Text style={s.sub}>{o.job.request.zoneId} · {o.job.request.address}</Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Btn label="Decline" tone="ghost" onPress={() => answer(o.job.id, false)} />
+              </View>
+              <View style={{ flex: 2 }}>
+                <Btn label="Accept Job ✓" onPress={() => answer(o.job.id, true)} />
+              </View>
+            </View>
+          </View>
+        ))}
+
+        <Link href="/jobs" asChild><Btn label="View my jobs →" onPress={() => {}} tone="ghost" /></Link>
+        {err ? <Text style={s.error}>{err}</Text> : null}
       </ScrollView>
       <TabBar />
     </View>

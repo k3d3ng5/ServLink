@@ -99,7 +99,20 @@ requests.get("/:id", async (req, res, next) => {
       },
     });
     if (!request) return res.status(404).json({ error: "not found" });
-    res.json({ request });
+    // Privacy: provider contact (phone/chat/email) is revealed only once both
+    // sides are committed (CONFIRMED+). Before that: assignment without contact.
+    const revealed = ["CONFIRMED", "IN_PROGRESS", "DONE_PENDING_CONFIRM", "FOLLOW_UP_SENT", "COMPLETED", "REWORK_REQUESTED"].includes(request.status);
+    const { phone: _cp, telegramChatId: _cc, ...safeCustomer } = request.customer;
+    const safe = {
+      ...request,
+      customer: safeCustomer,
+      jobs: request.jobs.map((j) => {
+        if (revealed) return j;
+        const { phone: _pp, telegramChatId: _pc, email: _pe, ...safeProvider } = j.provider;
+        return { ...j, provider: safeProvider };
+      }),
+    };
+    res.json({ request: safe });
   } catch (err) {
     next(err);
   }

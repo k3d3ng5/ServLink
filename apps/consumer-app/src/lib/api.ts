@@ -39,7 +39,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export interface JobView {
   id: string;
-  provider: { name: string };
+  provider: { name: string; phone?: string | null; tier?: string };
   followUps: Array<{ id: string }>;
   amountKobo: number | null;
   paymentStatus: string;
@@ -112,4 +112,17 @@ export const api = {
     }),
   markDone: (jobId: string, actor: "provider" | "customer" | "concierge") =>
     req(`/jobs/${jobId}/mark-done`, { method: "POST", body: JSON.stringify({ actor }) }),
+  offers: (providerId: string) =>
+    req<{
+      offers: Array<{
+        id: string;
+        status: string;
+        expiresAt: string;
+        job: { id: string; request: { description: string; zoneId: string; address: string } };
+      }>;
+    }>(`/providers/${providerId}/offers`),
+  acceptJob: (jobId: string) =>
+    req(`/jobs/${jobId}/accept`, { method: "POST", body: JSON.stringify({ actor: "provider" }) }),
+  declineJob: (jobId: string) =>
+    req(`/jobs/${jobId}/decline`, { method: "POST", body: JSON.stringify({ actor: "provider" }) }),
 };
