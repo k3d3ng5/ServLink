@@ -9,7 +9,7 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "SERVLINK_API_URL": "https://examples-hazards-hiring-ecology.trycloudflare.com" }
+      "env": { "SERVLINK_API_URL": "https://biography-wallpaper-removed-rehab.trycloudflare.com" }
     },
     "production": {
       "autoIncrement": true
