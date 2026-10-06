@@ -44,22 +44,11 @@ export async function send(input: SendInput): Promise<{ delivered: boolean; via:
     console.log(`[notify] telegram -> ${to} ok=${res.ok}`);
     return { delivered: res.ok, via: "telegram" };
   }
-  if (kind === "email" && process.env.RESEND_API_KEY) {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM ?? "ServLink <noreply@servlink.app>",
-        to: [to],
-        subject: "ServLink update",
-        text,
-      }),
-    });
-    console.log(`[notify] email -> ${to} ok=${res.ok}`);
-    return { delivered: res.ok, via: "email" };
+  if (kind === "email") {
+    const { sendMail } = await import("./mail.js");
+    const r = await sendMail(to, "ServLink update", text);
+    console.log(`[notify] email -> ${to} ok=${r.ok} via=${r.via}`);
+    return { delivered: r.ok, via: r.via };
   }
   console.log(`[notify] (${kind} unconfigured, logged) -> ${to}: ${text.slice(0, 120)}`);
   return { delivered: false, via: "log" };
