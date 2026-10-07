@@ -6,7 +6,7 @@ import Constants from "expo-constants";
 import { session } from "../session";
 
 // Public API origin for remote viewers (tunnel URL — changes per session).
-const TUNNEL_API_URL = "https://forming-loved-whilst-republicans.trycloudflare.com";
+const TUNNEL_API_URL = "https://greensboro-actions-edward-urw.trycloudflare.com";
 
 function resolveBaseUrl(): string {
   const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string };

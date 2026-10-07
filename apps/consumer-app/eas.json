@@ -9,7 +9,7 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "SERVLINK_API_URL": "https://forming-loved-whilst-republicans.trycloudflare.com" }
+      "env": { "SERVLINK_API_URL": "https://greensboro-actions-edward-urw.trycloudflare.com" }
     },
     "production": {
       "autoIncrement": true
